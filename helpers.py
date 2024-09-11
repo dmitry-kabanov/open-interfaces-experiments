@@ -18,10 +18,19 @@ FIGSIZE_TWO_SUBPLOTS_ONE_ROW = (6.0, 2)
 FIGSIZE_WIDE_TWO_SUBPLOTS_TWO_ROWS = (4.5, 4)
 
 
-def get_output_dir() -> pathlib.Path:
-    output_dir = pathlib.Path(sys.argv[0]).parent.resolve() / "_output"
-    assert os.path.isdir(output_dir)
-    return output_dir
+def get_expdir() -> pathlib.Path:
+    """Return the directory of the current experiment."""
+    expdir = pathlib.Path(sys.argv[0]).parent.resolve()
+    return expdir
+
+
+def get_outdir() -> pathlib.Path:
+    """Return the directory of the output for the current experiment."""
+    outdir = pathlib.Path(sys.argv[0]).parent.resolve() / "_output"
+    assert os.path.isdir(outdir)
+    outdir = outdir.relative_to(os.getcwd())
+    assert os.path.isdir(outdir)
+    return outdir
 
 
 def savefig(filename, dirname="", **kwargs):
