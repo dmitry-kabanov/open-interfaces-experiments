@@ -1,0 +1,6 @@
+---
+rules:
+    truthy:
+        allowed-values: ['true', 'false', 'on']
+    line-length:
+        max: 88
