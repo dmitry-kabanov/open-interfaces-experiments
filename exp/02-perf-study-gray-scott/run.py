@@ -4,10 +4,9 @@ import os
 import pickle
 import shutil
 
+import examples.compare_performance_ivp_cvode_gray_scott as gs
 import matplotlib.pyplot as plt
 import numpy as np
-
-import examples.compare_performance_ivp_cvode_gray_scott as gs
 
 OUTDIR = "exp/02-perf-study-gray-scott/_output"
 RESULT_DATA_PICKLE = os.path.join(OUTDIR, "ivp_cvode_gs_data.pickle")

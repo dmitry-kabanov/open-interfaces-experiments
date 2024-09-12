@@ -21,7 +21,7 @@ function compute_rhs(udot, u, p, t)
     f_hat = @views 0.5 * (f[1:end-1] + f[2:end]) .- 0.5 * c * (u[2:end] - u[1:end-1])
     f_plus = @views f_hat[2:length(f_hat)]
     f_minus = @views f_hat[1:length(f_hat) - 1]
-    
+
     udot[2:end-1] = -1.0 / dx * (f_plus - f_minus)
 
     local_ss_rb = max(abs(u[1]), abs(u[end]))
@@ -66,7 +66,7 @@ function measure_perf_once(N)
     end
     toc = time_ns()
     runtime_1 = toc - tic
-    
+
     tic = time_ns()
     solution = solve(odeProblem, DP5(), reltol = 1e-6, abstol = 1e-12, saveat=times)
     solution_last_2 = solution.u[end]

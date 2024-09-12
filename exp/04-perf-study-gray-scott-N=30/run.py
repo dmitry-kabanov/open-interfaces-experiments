@@ -4,10 +4,10 @@ import os
 import pickle
 import shutil
 
+import examples.compare_performance_ivp_cvode_gray_scott as gs
 import matplotlib.pyplot as plt
 import numpy as np
 
-import examples.compare_performance_ivp_cvode_gray_scott as gs
 from helpers import FIGSIZE_TWO_SUBPLOTS_TWO_ROWS
 
 OUTDIR = "exp/04-perf-study-gray-scott-N=30/_output"

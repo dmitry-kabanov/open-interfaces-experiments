@@ -1,7 +1,7 @@
 # Jupyter Book files.
 oif-notebook/_build/
 # These notes must be symlinks from the actual notes.
-oif-notebook/exp/**/note.md  
+oif-notebook/exp/**/note.md
 
 # ------------------------------ BEGIN Python ---------------------------------
 # Byte-compiled / optimized / DLL files
