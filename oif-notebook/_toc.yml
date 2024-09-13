@@ -9,3 +9,4 @@ chapters:
     - file: notebooks
     - file: markdown-notebooks
     - file: exp/07-ivp-burgers-native-vs-oif/note
+    - file: exp/08-ivp-burgers-native-vs-oif/note
