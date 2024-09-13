@@ -43,6 +43,52 @@ def compute_rhs_oif_numpy(__, u: np.ndarray, udot: np.ndarray, p) -> None:
     udot[-1] = -1.0 / dx * (f_rb - f_plus[-1])
 
 
+@numba.jit
+def compute_rhs_numba(__, u: np.ndarray, udot: np.ndarray, p) -> None:
+    (dx,) = p
+
+    # f = 0.5 * u**2
+    # local_ss = np.max(np.abs(u))
+
+    # f_hat = 0.5 * (f[0:-1] + f[1:]) - 0.5 * local_ss * (u[1:] - u[0:-1])
+    # f_plus = f_hat[1:]
+    # f_minus = f_hat[0:-1]
+    # udot[1:-1] = -1.0 / dx * (f_plus - f_minus)
+
+    # local_ss_rb = np.maximum(np.abs(u[0]), np.abs(u[-1]))
+    # f_rb = 0.5 * (f[0] + f[-1]) - 0.5 * local_ss_rb * (u[0] - u[-1])
+    # f_lb = f_rb
+
+    # udot[+0] = -1.0 / dx * (f_minus[0] - f_lb)
+    # udot[-1] = -1.0 / dx * (f_rb - f_plus[-1])
+
+    N = u.shape[0]
+
+    f = np.empty(N)
+    for i in range(N):
+        f[i] = 0.5 * u[i] ** 2
+
+    local_ss = 0.0
+    for i in range(N - 1):
+        cand = max(abs(u[i]), abs(u[i + 1]))
+        if cand > local_ss:
+            local_ss = cand
+
+    f_hat = np.empty(N - 1)
+    for i in range(N - 1):
+        f_hat[i] = 0.5 * (f[i] + f[i + 1]) - 0.5 * local_ss * (u[i + 1] - u[i])
+
+    for i in range(1, N - 1):
+        udot[i] = -1.0 / dx * (f_hat[i] - f_hat[i - 1])
+
+    local_ss_rb = max(abs(u[0]), abs(u[-1]))
+    f_rb = 0.5 * (f[0] + f[-1]) - 0.5 * local_ss_rb * (u[0] - u[-1])
+    f_lb = f_rb
+
+    udot[0] = -1.0 / dx * (f_hat[0] - f_lb)
+    udot[-1] = -1.0 / dx * (f_rb - f_hat[-1])
+
+
 def get_wrapper_for_compute_rhs_ode(dx):
     def compute_rhs_ode_wrapper(t, u):
         return compute_rhs_ode_numba(t, u, dx)
@@ -53,7 +99,11 @@ def get_wrapper_for_compute_rhs_ode(dx):
 @numba.jit
 def compute_rhs_ode_numba(t: float, u: np.ndarray, dx: float) -> np.ndarray:
     N = u.shape[0]
-    f = 0.5 * u**2
+
+    f = np.empty(N)
+    for i in range(N):
+        f[i] = 0.5 * u[i] ** 2
+
     local_ss = 0.0
     for i in range(N - 1):
         cand = max(abs(u[i]), abs(u[i + 1]))
