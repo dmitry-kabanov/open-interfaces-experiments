@@ -24,8 +24,7 @@ OUTDIR = get_outdir()
 RESULT_PERF_FILENAME = OUTDIR / "runtime_vs_resolution_python_numba.csv"
 
 
-@numba.jit
-def compute_rhs_numba(__, u: np.ndarray, udot: np.ndarray, p) -> None:
+def compute_rhs_oif_numpy(__, u: np.ndarray, udot: np.ndarray, p) -> None:
     (dx,) = p
 
     f = 0.5 * u**2
@@ -126,6 +125,17 @@ def measure_perf_once(N):
     p = (problem.dx,)
     dx = problem.dx
 
+    compute_rhs_ode = get_wrapper_for_compute_rhs_ode(dx)
+
+    # Sanity check: Numba functions must return the same values as the NumPy one.
+    result_1 = np.empty_like(y0)
+    result_2 = np.empty_like(y0)
+    compute_rhs_oif_numpy(t0, y0, result_1, p)
+    compute_rhs_numba(t0, y0, result_2, p)
+    result_3 = compute_rhs_ode(t0, y0)
+    npt.assert_allclose(result_1, result_2, rtol=1e-14, atol=1e-14)
+    npt.assert_allclose(result_1, result_3, rtol=1e-14, atol=1e-14)
+
     s = IVP("scipy_ode")
     s.set_initial_value(problem.u0, problem.t0)
     s.set_user_data(p)
@@ -144,7 +154,6 @@ def measure_perf_once(N):
     oif_time = toc - tic
     oif_solution.append(s.y)
 
-    compute_rhs_ode = get_wrapper_for_compute_rhs_ode(dx)
     solver_ode = integrate.ode(compute_rhs_ode)
     # solver_ode.set_f_params(dx)
     solver_ode.set_integrator("dopri5", rtol=1e-6, atol=1e-12)
