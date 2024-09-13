@@ -1,0 +1,3 @@
+method/resolution,800,1600,3200
+julia-DP5,0.15 ± 0.02,0.47 ± 0.00,1.80 ± 0.04
+julia-Sundials-CVODE_Adams,0.26 ± 0.00,0.89 ± 0.04,3.44 ± 0.07
