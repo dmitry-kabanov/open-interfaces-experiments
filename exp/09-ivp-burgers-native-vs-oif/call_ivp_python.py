@@ -21,7 +21,7 @@ NUMBER_OF_RUNS = 2
 VERSIONS = ["v1", "v2", "v3"]
 
 OUTDIR = get_outdir()
-RESULT_PERF_FILENAME = OUTDIR / "runtime_vs_resolution_python_numba.csv"
+RESULT_PERF_FILENAME = OUTDIR / "runtime_vs_resolution_python.csv"
 
 
 def compute_rhs_oif_numpy(__, u: np.ndarray, udot: np.ndarray, p) -> None:
@@ -131,41 +131,39 @@ def compute_rhs_oif_numba_v3(__, u: np.ndarray, udot: np.ndarray, p) -> None:
     udot[-1] = dx_inv * (f_hat_prev - f_hat_rb)
 
 
-def get_wrapper_for_compute_rhs_ode(dx):
+def get_wrapper_for_compute_rhs_native(dx):
     def compute_rhs_ode_wrapper(t, u):
-        return compute_rhs_ode_numba(t, u, dx)
+        return compute_rhs_native_numba_v3(t, u, dx)
 
     return compute_rhs_ode_wrapper
 
 
 @nb.jit
-def compute_rhs_ode_numba(t: float, u: np.ndarray, dx: float) -> np.ndarray:
+def compute_rhs_native_numba_v3(t: float, u: np.ndarray, dx: float) -> np.ndarray:
     N = u.shape[0]
-
-    f = np.empty(N)
-    for i in range(N):
-        f[i] = 0.5 * u[i] ** 2
+    udot = np.empty_like(u)
 
     local_ss = 0.0
     for i in range(N - 1):
         cand = abs(u[i])
         if cand > local_ss:
             local_ss = cand
+    # local_ss = np.amax(np.abs(u))
     local_ss_rb = max(abs(u[0]), abs(u[-1]))
 
-    f_hat = np.empty(N - 1)
+    dx_inv = 1.0 / dx
+
+    f_cur = 0.5 * u[0] ** 2
+    f_hat_lb = 0.5 * (f_cur + 0.5 * u[-1] ** 2) - 0.5 * local_ss_rb * (u[0] - u[-1])
+    f_hat_prev = f_hat_lb
     for i in range(N - 1):
-        f_hat[i] = 0.5 * (f[i] + f[i + 1]) - 0.5 * local_ss * (u[i + 1] - u[i])
+        f_next = 0.5 * u[i + 1] ** 2
+        f_hat_cur = 0.5 * ((f_cur + f_next) - local_ss * (u[i + 1] - u[i]))
+        udot[i] = dx_inv * (f_hat_prev - f_hat_cur)
+        f_hat_prev, f_cur = f_hat_cur, f_next
 
-    udot = np.empty_like(u)
-    for i in range(1, N - 1):
-        udot[i] = -1.0 / dx * (f_hat[i] - f_hat[i - 1])
-
-    f_rb = 0.5 * (f[0] + f[-1]) - 0.5 * local_ss_rb * (u[0] - u[-1])
-    f_lb = f_rb
-
-    udot[0] = -1.0 / dx * (f_hat[0] - f_lb)
-    udot[-1] = -1.0 / dx * (f_rb - f_hat[-1])
+    f_hat_rb = f_hat_lb
+    udot[-1] = dx_inv * (f_hat_prev - f_hat_rb)
 
     return udot
 
@@ -177,7 +175,7 @@ def measure_perf_once(N):
     p = (problem.dx,)
     dx = problem.dx
 
-    compute_rhs_ode = get_wrapper_for_compute_rhs_ode(dx)
+    compute_rhs_ode = get_wrapper_for_compute_rhs_native(dx)
     # compute_rhs_ode = compute_rhs_ode_numba
 
     # Sanity check: Numba functions must return the same values as the NumPy one.
@@ -187,7 +185,7 @@ def measure_perf_once(N):
     result_1 = np.empty_like(y0)
     result_2 = np.empty_like(y0)
     result_3 = np.empty_like(y0)
-    result_4 = np.empty_like(y0)
+    # result_4 = np.empty_like(y0)
     compute_rhs_oif_numba_v1(t0, y0, result_1, p)
     compute_rhs_oif_numba_v2(t0, y0, result_2, p)
     compute_rhs_oif_numba_v3(t0, y0, result_3, p)
@@ -229,7 +227,6 @@ def measure_perf_once(N):
         oif_solution_1.append(s.y)
 
     solver_ode = integrate.ode(compute_rhs_ode)
-    # solver_ode.set_f_params(dx)
     solver_ode.set_integrator("dopri5", rtol=1e-6, atol=1e-12)
     solver_ode.set_initial_value(problem.u0, problem.t0)
 
@@ -253,7 +250,7 @@ def main():
 
     table = {}
 
-    numba_format_template = "py-oif-numba-{v}"
+    numba_format_template = "py-openif-numba-{v}"
 
     for N in RESOLUTIONS_LIST:
         oif_time_list = {}
@@ -268,7 +265,7 @@ def main():
 
         for v in VERSIONS:
             table[(numba_format_template.format(v=v), N)] = oif_time_list[v]
-        table[("numba-python-native", N)] = native_time_list
+        table[("py-native-numba-v3", N)] = native_time_list
 
     with open(RESULT_PERF_FILENAME, "w") as fh:
         fh.write(
