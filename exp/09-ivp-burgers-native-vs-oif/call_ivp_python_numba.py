@@ -18,7 +18,7 @@ from helpers import get_outdir
 RESOLUTIONS_LIST = [800, 1600, 3200]
 RESOLUTIONS_LIST = [800, 1600]
 NUMBER_OF_RUNS = 2
-VERSIONS = ["v1", "v2", "v3", "v4"]
+VERSIONS = ["v1", "v2", "v3"]
 
 OUTDIR = get_outdir()
 RESULT_PERF_FILENAME = OUTDIR / "runtime_vs_resolution_python_numba.csv"
@@ -47,7 +47,7 @@ def compute_rhs_oif(__, u, udot, p):
     compute_rhs_oif_numba_v1(__, u, udot, p)
 
 
-@numba.jit
+@nb.jit
 def compute_rhs_oif_numba_v1(__, u: np.ndarray, udot: np.ndarray, p) -> None:
     (dx,) = p
 
@@ -69,25 +69,6 @@ def compute_rhs_oif_numba_v1(__, u: np.ndarray, udot: np.ndarray, p) -> None:
 
 @nb.jit
 def compute_rhs_oif_numba_v2(__, u: np.ndarray, udot: np.ndarray, p) -> None:
-    (dx,) = p
-
-    f = 0.5 * u**2
-    local_ss = np.max(np.abs(u))
-
-    f_hat = 0.5 * (f[0:-1] + f[1:]) - 0.5 * local_ss * (u[1:] - u[0:-1])
-    f_plus = f_hat[1:]
-    f_minus = f_hat[0:-1]
-    udot[1:-1] = -1.0 / dx * (f_plus - f_minus)
-
-    local_ss_rb = np.maximum(np.abs(u[0]), np.abs(u[-1]))
-    f_rb = 0.5 * (f[0] + f[-1]) - 0.5 * local_ss_rb * (u[0] - u[-1])
-    f_lb = f_rb
-
-    udot[+0] = -1.0 / dx * (f_minus[0] - f_lb)
-    udot[-1] = -1.0 / dx * (f_rb - f_plus[-1])
-
-
-def compute_rhs_oif_numba_v3(__, u: np.ndarray, udot: np.ndarray, p) -> None:
     (dx,) = p
 
     N = u.shape[0]
@@ -118,10 +99,15 @@ def compute_rhs_oif_numba_v3(__, u: np.ndarray, udot: np.ndarray, p) -> None:
 
 
 # Note that `nopython=True` is default since Numba 0.59.
-def compute_rhs_oif_numba_v4(__, u: np.ndarray, udot: np.ndarray, p) -> None:
+@nb.jit(
+    # nb.types.void(nb.float64, nb.float64[:], nb.float64[:], nb.typeof((3.14,))),
+    boundscheck=False,
+    nogil=True,
+)
+def compute_rhs_oif_numba_v3(__, u: np.ndarray, udot: np.ndarray, p) -> None:
     (dx,) = p
-
     N = u.shape[0]
+
     local_ss = 0.0
     for i in range(N - 1):
         cand = abs(u[i])
@@ -205,18 +191,18 @@ def measure_perf_once(N):
     compute_rhs_oif_numba_v1(t0, y0, result_1, p)
     compute_rhs_oif_numba_v2(t0, y0, result_2, p)
     compute_rhs_oif_numba_v3(t0, y0, result_3, p)
-    compute_rhs_oif_numba_v4(t0, y0, result_4, p)
+    # compute_rhs_oif_numba_v4(t0, y0, result_4, p)
 
     npt.assert_allclose(result_0, result_1, rtol=1e-14, atol=1e-14)
     npt.assert_allclose(result_0, result_2, rtol=1e-14, atol=1e-14)
     npt.assert_allclose(result_0, result_3, rtol=1e-14, atol=1e-14)
-    npt.assert_allclose(result_0, result_4, rtol=1e-14, atol=1e-14)
+    # npt.assert_allclose(result_0, result_4, rtol=1e-14, atol=1e-14)
 
     result_scipy_3 = compute_rhs_ode(t0, y0)
     npt.assert_allclose(result_0, result_scipy_3, rtol=1e-14, atol=1e-14)
 
     runtimes = {}
-    for version in ["v1", "v2", "v3", "v4"]:
+    for version in VERSIONS:
         s = IVP("scipy_ode")
         s.set_initial_value(problem.u0, problem.t0)
         s.set_user_data(p)
@@ -226,8 +212,8 @@ def measure_perf_once(N):
             s.set_rhs_fn(compute_rhs_oif_numba_v2)
         elif version == "v3":
             s.set_rhs_fn(compute_rhs_oif_numba_v3)
-        elif version == "v4":
-            s.set_rhs_fn(compute_rhs_oif_numba_v4)
+        # elif version == "v4":
+        #     s.set_rhs_fn(compute_rhs_oif_numba_v4)
         s.set_integrator("dopri5")
         s.set_tolerances(rtol=1e-6, atol=1e-12)
 
