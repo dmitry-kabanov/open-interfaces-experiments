@@ -17,20 +17,18 @@ EXPDIR = get_expdir()
 OUTDIR = get_outdir()
 STYLES = ["-", "--", ":"]
 
-DATA_1 = OUTDIR / "runtime_vs_resolution_python_numba.csv"
+DATA_1 = OUTDIR / "runtime_vs_resolution_python.csv"
 
 PROG_1 = ["python", (EXPDIR / "call_ivp_python.py")]
 
-DATA_2_1 = OUTDIR / "runtime_vs_resolution_julia_inline.csv"
-DATA_2_2 = OUTDIR / "runtime_vs_resolution_julia_noinline.csv"
+DATA_2_1 = OUTDIR / "runtime_vs_resolution_julia.csv"
+# DATA_2_2 = OUTDIR / "runtime_vs_resolution_julia_noinline.csv"
 DATA_2_3 = OUTDIR / "runtime_vs_resolution_python_jl_diffeq_numba.csv"
 
 PROG_2_1 = ["julia", EXPDIR / "call_ivp_julia.jl"]
 PROG_2_3 = ["python", EXPDIR / "call_jl_diffeq_from_python.py", "jl_diffeq"]
 
 DATA_3 = OUTDIR / "runtime_vs_resolution_julia_sundials.csv"
-
-DATA_4 = OUTDIR / "runtime_vs_resolution_julia_fused.csv"
 
 RESULT_PYTHON_STATS = OUTDIR / "runtime_vs_resolution_python_stats.csv"
 RESULT_JULIA_STATS = OUTDIR / "runtime_vs_resolution_julia_stats.csv"
@@ -51,19 +49,19 @@ def main():
         print("Data2 are present, running process_2()")
         process_2()
 
-    if not data3_are_present():
-        print("Data3 are not present, running compute_3()")
-        # compute_3()
-        raise NotImplementedError()
-    else:
-        print("Data3 are present, running process_3()")
-        process_3()
+    # if not data3_are_present():
+    #     print("Data3 are not present, running compute_3()")
+    #     # compute_3()
+    #     raise NotImplementedError()
+    # else:
+    #     print("Data3 are present, running process_3()")
+    #     process_3()
 
-    if not data4_are_present():
-        print("Data4 are not present, running compute_4()")
-        raise NotImplementedError()
-    else:
-        process_4()
+    # if not data4_are_present():
+    #     print("Data4 are not present, running compute_4()")
+    #     raise NotImplementedError()
+    # else:
+    #     process_4()
 
 
 def data1_are_present():
@@ -75,7 +73,7 @@ def data1_are_present():
 
 
 def data2_are_present():
-    for f in [DATA_2_1, DATA_2_2]:
+    for f in [DATA_2_1, DATA_2_3]:
         if not os.path.isfile(f):
             return False
 
@@ -85,14 +83,6 @@ def data2_are_present():
 def data3_are_present():
     are_present = True
     if not os.path.isfile(DATA_3):
-        are_present = False
-
-    return are_present
-
-
-def data4_are_present():
-    are_present = True
-    if not os.path.isfile(DATA_4):
         are_present = False
 
     return are_present
@@ -164,13 +154,13 @@ def compute_2():
     p2_1 = subprocess.run(PROG_2_1, encoding="utf-8")
     assert p2_1.returncode == 0
 
-    p2_2 = subprocess.run(PROG_2_2, encoding="utf-8")
-    assert p2_2.returncode == 0
+    p2_3 = subprocess.run(PROG_2_3, encoding="utf-8")
+    assert p2_3.returncode == 0
 
 
 def process_2():
     f_2_1 = open(DATA_2_1, "r")
-    f_2_2 = open(DATA_2_2, "r")
+    # f_2_2 = open(DATA_2_2, "r")
     f_2_3 = open(DATA_2_3, "r")
 
     f_2_out = open(RESULT_JULIA_STATS, "w")
@@ -178,15 +168,15 @@ def process_2():
         f_2_out.write(line)
 
     # noinline in Julia
-    f_2_2.readline()  # skip header
-    for line in f_2_2.readlines():
-        f_2_out.write(line)
+    # f_2_2.readline()  # skip header
+    # for line in f_2_2.readlines():
+    #     f_2_out.write(line)
 
     f_2_3.readline()  # skip header
     f_2_out.write(f_2_3.readline())
 
     f_2_1.close()
-    f_2_2.close()
+    # f_2_2.close()
     f_2_out.close()
 
     print()
@@ -198,12 +188,6 @@ def process_3():
     print()
     print("Julia DP5 versus Sundials.jl CVODE_Adams")
     subprocess.run(["column", "-s,", "-t", DATA_3])
-
-
-def process_4():
-    print()
-    print("Julia DP5 completely fused loop")
-    subprocess.run(["column", "-s,", "-t", DATA_4])
 
 
 if __name__ == "__main__":
