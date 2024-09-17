@@ -156,7 +156,7 @@ def compute():
         runtimes = []
         for N in RESOLUTIONS_LIST:
             runtimes.append(table[N])
-        writer.writerow(["numba-julia-oif-from-python"] + runtimes)
+        writer.writerow(["py-openif-numba-v3-jl"] + runtimes)
 
     print(f"Data are written to {RESULT_JL_DIFFEQ_PYTHON_FILENAME}")
     print("Finished")

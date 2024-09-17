@@ -278,7 +278,7 @@ def main():
                 runtimes = ", ".join([f"{t:3f}" for t in table[method, N]])
                 fh.write(f"{method}, {N}, " + runtimes + "\n")
 
-        for method in ["numba-python-native"]:
+        for method in ["py-native-numba-v3"]:
             for N in RESOLUTIONS_LIST:
                 runtimes = ", ".join([f"{t:3f}" for t in table[method, N]])
                 fh.write(f"{method}, {N}, " + runtimes + "\n")
