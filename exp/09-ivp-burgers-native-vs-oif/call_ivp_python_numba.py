@@ -5,10 +5,8 @@ directly via SciPy.
 """
 
 import time
-from typing import List
 
-import matplotlib.pyplot as plt
-import numba
+import numba as nb
 import numpy as np
 import numpy.testing as npt
 from oif.interfaces.ivp import IVP
@@ -69,7 +67,7 @@ def compute_rhs_oif_numba_v1(__, u: np.ndarray, udot: np.ndarray, p) -> None:
     udot[-1] = -1.0 / dx * (f_rb - f_plus[-1])
 
 
-@numba.jit(nopython=True)
+@nb.jit
 def compute_rhs_oif_numba_v2(__, u: np.ndarray, udot: np.ndarray, p) -> None:
     (dx,) = p
 
@@ -89,7 +87,6 @@ def compute_rhs_oif_numba_v2(__, u: np.ndarray, udot: np.ndarray, p) -> None:
     udot[-1] = -1.0 / dx * (f_rb - f_plus[-1])
 
 
-@numba.jit(nopython=True)
 def compute_rhs_oif_numba_v3(__, u: np.ndarray, udot: np.ndarray, p) -> None:
     (dx,) = p
 
@@ -120,7 +117,7 @@ def compute_rhs_oif_numba_v3(__, u: np.ndarray, udot: np.ndarray, p) -> None:
     udot[-1] = -1.0 / dx * (f_rb - f_hat[-1])
 
 
-@numba.jit(nopython=True)
+# Note that `nopython=True` is default since Numba 0.59.
 def compute_rhs_oif_numba_v4(__, u: np.ndarray, udot: np.ndarray, p) -> None:
     (dx,) = p
 
@@ -155,7 +152,7 @@ def get_wrapper_for_compute_rhs_ode(dx):
     return compute_rhs_ode_wrapper
 
 
-@numba.jit
+@nb.jit
 def compute_rhs_ode_numba(t: float, u: np.ndarray, dx: float) -> np.ndarray:
     N = u.shape[0]
 
