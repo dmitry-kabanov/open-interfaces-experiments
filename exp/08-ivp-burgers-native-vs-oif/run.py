@@ -30,6 +30,8 @@ PROG_2_3 = ["python", EXPDIR / "call_jl_diffeq_from_python.py", "jl_diffeq"]
 
 DATA_3 = OUTDIR / "runtime_vs_resolution_julia_sundials.csv"
 
+DATA_4 = OUTDIR / "runtime_vs_resolution_julia_fused.csv"
+
 RESULT_PYTHON_STATS = OUTDIR / "runtime_vs_resolution_python_stats.csv"
 RESULT_JULIA_STATS = OUTDIR / "runtime_vs_resolution_julia_stats.csv"
 
@@ -52,9 +54,16 @@ def main():
     if not data3_are_present():
         print("Data3 are not present, running compute_3()")
         # compute_3()
+        raise NotImplementedError()
     else:
         print("Data3 are present, running process_3()")
         process_3()
+
+    if not data4_are_present():
+        print("Data4 are not present, running compute_4()")
+        raise NotImplementedError()
+    else:
+        process_4()
 
 
 def data1_are_present():
@@ -76,6 +85,14 @@ def data2_are_present():
 def data3_are_present():
     are_present = True
     if not os.path.isfile(DATA_3):
+        are_present = False
+
+    return are_present
+
+
+def data4_are_present():
+    are_present = True
+    if not os.path.isfile(DATA_4):
         are_present = False
 
     return are_present
@@ -175,15 +192,18 @@ def process_2():
     print()
     print("Julia OIF from Python vs Native")
     subprocess.run(["column", "-s,", "-t"], stdin=open(RESULT_JULIA_STATS, "r"))
-    # print()
-    # print("To view the results next time, you can use the following command:")
-    # print("    column -s, -t ", RESULT_JULIA_STATS)
 
 
 def process_3():
     print()
     print("Julia DP5 versus Sundials.jl CVODE_Adams")
     subprocess.run(["column", "-s,", "-t", DATA_3])
+
+
+def process_4():
+    print()
+    print("Julia DP5 completely fused loop")
+    subprocess.run(["column", "-s,", "-t", DATA_4])
 
 
 if __name__ == "__main__":
