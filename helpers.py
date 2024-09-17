@@ -5,6 +5,7 @@ import pathlib
 import sys
 
 import matplotlib.pyplot as plt
+import numpy as np
 
 # Figure size for a single-plot figure that takes 50 % of text width.
 FIGSIZE_NORMAL = (3.0, 2)
@@ -45,3 +46,11 @@ def savefig(filename, dirname="", **kwargs):
             raise RuntimeError("Directory `%s` does not exist" % dirname)
     else:
         plt.show()
+
+
+def compute_mean_and_ci(values: np.ndarray | list) -> tuple[float, float]:
+    """Returns mean and err, so that mean ْ± err defines 95% confidence interval."""
+    mean = np.mean(values)
+    err = 2 * np.std(values, ddof=1) / np.sqrt(len(values))
+
+    return mean, err
