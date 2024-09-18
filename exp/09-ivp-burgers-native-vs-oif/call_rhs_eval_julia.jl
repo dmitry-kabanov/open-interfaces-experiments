@@ -25,24 +25,31 @@ function compute_rhs_v1(udot, u, p, t)
 end
 
 
-function compute_rhs_v2(udot, u, p, t)
+function compute_rhs_v2(udot::Vector{Float64}, u::Vector{Float64}, p::Tuple, t::Float64)
     dx, = p
-    dx⁻¹ = inv(dx)
+    dx_inv = inv(dx)
+    N = length(u)
     
-    c = maximum(abs, u)  # Local sound speed
+    c = 0.0  # Local sound speed
+    for i = 1:N
+        cand = abs(u[i])
+        if cand > c
+            c = cand
+        end
+    end
     local_ss_rb = max(abs(u[1]), abs(u[end]))
         
     f_cur = 0.5 * u[1]^2
-    f̂_lb = 0.5 * (f_cur + 0.5 * u[end]^2) - 0.5 * local_ss_rb * (u[1] - u[end])
-    f̂_prev = f̂_lb
-    @inbounds for i = 1:length(udot)-1
+    f_hat_lb = 0.5 * ((f_cur + 0.5 * u[end]^2) - local_ss_rb * (u[1] - u[end]))
+    f_hat_prev = f_hat_lb
+    @inbounds for i = 1:N-1
         f_next = 0.5 * u[i+1]^2
-        f̂_cur = 0.5 * ((f_cur+f_next) - c * (u[i+1]-u[i]))
-        udot[i] = dx⁻¹ * (f̂_prev - f̂_cur)
-        f̂_prev, f_cur = f̂_cur, f_next
+        f_hat_cur = 0.5 * ((f_cur+f_next) - c * (u[i+1]-u[i]))
+        udot[i] = dx_inv * (f_hat_prev - f_hat_cur)
+        f_hat_prev, f_cur = f_hat_cur, f_next
     end
-    f̂_rb = f̂_lb
-    udot[end] = dx⁻¹ * (f̂_prev - f̂_rb)
+    f_hat_rb = f_hat_lb
+    udot[end] = dx_inv * (f_hat_prev - f_hat_rb)
 end
 
 function runtime_stats(elapsed_times)
