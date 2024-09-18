@@ -74,13 +74,19 @@ function measure()
     tfinal = 10.0
 
     udot = similar(u0)
+    udot_test_plain = similar(u0)
+    udot_test_optim = similar(u0)
     u = rand(N + 1, N_RUNS)
+    for j = 1:N_RUNS
+        u[:, j] = u0
+    end
 
-    @printf "Julia, accumulated %d RHS evaluations, %d trials\n" N_RUNS N_TRIALS
+    @printf "Julia, accumulated runtime of %d RHS evals, statistics from %d trials\n" N_RUNS N_TRIALS
+    @printf "Problem size is %d\n" length(udot)
 
     # Timing the plain version
     values_plain = []
-    compute_rhs_v1(udot, u[:, 1], (dx,), 0.0)
+    compute_rhs_v1(udot_test_plain, u[:, 1], (dx,), 0.0)
     for t = 1:N_TRIALS
         tic = time_ns()
         for j = 1:N_RUNS
@@ -95,7 +101,7 @@ function measure()
 
     # Timing the optimized version
     values_optim = []
-    compute_rhs_v2(udot, u[:, 1], (dx,), 0.0)
+    compute_rhs_v2(udot_test_optim, u[:, 1], (dx,), 0.0)
     for t = 1:N_TRIALS
         tic = time_ns()
         for j = 1:N_RUNS
@@ -107,6 +113,9 @@ function measure()
     end
     mean, ci = runtime_stats(values_optim)
     @printf "Julia, optim version: %.3f ± %.3f\n" mean ci
+
+    @test udot_test_plain ≈ udot_test_optim rtol=1e-14 atol=1e-14
+    @printf "Leftmost udot value: %.16f\n" udot[1]
 end
 
 measure()
