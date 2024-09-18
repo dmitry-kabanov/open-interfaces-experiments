@@ -131,17 +131,23 @@ def compute_rhs_oif_numba_v3(__, u: np.ndarray, udot: np.ndarray, p) -> None:
     udot[-1] = dx_inv * (f_hat_prev - f_hat_rb)
 
 
-def get_wrapper_for_compute_rhs_native(dx):
+def get_wrapper_for_compute_rhs_native(dx, N):
+    udot = np.empty(N)
+
     def compute_rhs_ode_wrapper(t, u):
-        return compute_rhs_native_numba_v3(t, u, dx)
+        return compute_rhs_native_numba_v3(t, u, dx, udot)
 
     return compute_rhs_ode_wrapper
 
 
-@nb.jit
-def compute_rhs_native_numba_v3(t: float, u: np.ndarray, dx: float) -> np.ndarray:
+@nb.jit(
+    boundscheck=False,
+    nogil=True,
+)
+def compute_rhs_native_numba_v3(
+    t: float, u: np.ndarray, dx: float, udot: np.ndarray
+) -> np.ndarray:
     N = u.shape[0]
-    udot = np.empty_like(u)
 
     local_ss = 0.0
     for i in range(N - 1):
@@ -175,7 +181,7 @@ def measure_perf_once(N):
     p = (problem.dx,)
     dx = problem.dx
 
-    compute_rhs_ode = get_wrapper_for_compute_rhs_native(dx)
+    compute_rhs_ode = get_wrapper_for_compute_rhs_native(dx, len(y0))
     # compute_rhs_ode = compute_rhs_ode_numba
 
     # Sanity check: Numba functions must return the same values as the NumPy one.
