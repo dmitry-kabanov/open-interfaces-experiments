@@ -10,6 +10,10 @@ N_TRIALS = 30
 N_RUNS = 100_000
 
 
+def print_runtime(prefix, mean, ci):
+    print(f"{prefix:32s} {mean:.3f} ± {ci:.3f}")
+
+
 # Note that `nopython=True` is default since Numba 0.59.
 @nb.jit(
     # nb.types.void(nb.float64, nb.float64[:], nb.float64[:], nb.typeof((3.14,))),
@@ -67,7 +71,7 @@ for k in range(N_TRIALS):
     toc = time.perf_counter()
     values_plain.append(toc - tic)
 mean, ci = compute_mean_and_ci(values_plain)
-print(f"Python + NumPy: {mean:.3f} ± {ci:.3f}")
+print_runtime("Python + NumPy", mean, ci)
 
 # Timing optim version
 optim_1 = nb.jit(
@@ -90,7 +94,7 @@ for k in range(N_TRIALS):
     toc = time.perf_counter()
     values_optim.append(toc - tic)
 mean, ci = compute_mean_and_ci(values_optim)
-print(f"Python + Numba v3 wi sign: {mean:.3f} ± {ci:.3f}")
+print_runtime("Python + Numba v3, signature=yes", mean, ci)
 
 # Timing optim version without signature.
 optim_2 = nb.jit(
@@ -109,7 +113,7 @@ for k in range(N_TRIALS):
     toc = time.perf_counter()
     values_optim.append(toc - tic)
 mean, ci = compute_mean_and_ci(values_optim)
-print(f"Python + Numba v3 no sign: {mean:.3f} ± {ci:.3f}")
+print_runtime("Python + Numba v3, signature=no", mean, ci)
 
 npt.assert_allclose(udot_test_plain, udot_test_numba_1, rtol=1e-14, atol=1e-14)
 npt.assert_allclose(udot_test_plain, udot_test_numba_2, rtol=1e-14, atol=1e-14)

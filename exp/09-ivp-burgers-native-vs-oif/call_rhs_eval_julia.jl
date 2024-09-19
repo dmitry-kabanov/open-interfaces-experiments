@@ -61,6 +61,10 @@ function runtime_stats(elapsed_times)
     return runtime_mean, ci
 end
 
+function print_runtime(prefix, mean, ci)
+    @printf "%-32s %.3f ± %.3f\n" prefix mean ci
+end
+
 function measure()
     N = 4000
     x = collect(range(0, 2, N + 1))
@@ -97,7 +101,7 @@ function measure()
         push!(values_plain, elapsed)
     end
     mean, ci = runtime_stats(values_plain)
-    @printf "Julia, plain version: %.3f ± %.3f\n" mean ci
+    print_runtime("Julia, plain version", mean, ci)
 
     # Timing the optimized version
     values_optim = []
@@ -112,7 +116,7 @@ function measure()
         push!(values_optim, elapsed)
     end
     mean, ci = runtime_stats(values_optim)
-    @printf "Julia, optim version: %.3f ± %.3f\n" mean ci
+    print_runtime("Julia, optimized version", mean, ci)
 
     @test udot_test_plain ≈ udot_test_optim rtol=1e-14 atol=1e-14
     @printf "Leftmost udot value: %.16f\n" udot[1]
