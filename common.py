@@ -31,6 +31,7 @@ class BurgersEquationProblem:
         self.udot = np.empty_like(self.u0)
         self.f = np.empty_like(self.u0)
         self.f_hat = np.empty(self.N)
+        self.rhs_evals = 0
 
     def compute_rhs(self, __, u: np.ndarray, udot: np.ndarray, ___) -> None:
         dx = self.dx
@@ -51,6 +52,8 @@ class BurgersEquationProblem:
 
         udot[+0] = -1.0 / dx * (f_minus[0] - f_lb)
         udot[-1] = -1.0 / dx * (f_rb - f_plus[-1])
+
+        self.rhs_evals += 1
 
     def compute_rhs_scipy_ode(self, t, u: np.ndarray) -> np.ndarray:
         self.compute_rhs(t, u, self.udot, None)
