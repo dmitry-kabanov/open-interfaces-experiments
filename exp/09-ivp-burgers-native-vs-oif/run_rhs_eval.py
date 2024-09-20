@@ -14,7 +14,8 @@ p1 = subprocess.run(
 )
 assert p1.returncode == 0
 print(p1.stdout)
-print(p1.stderr)
+if p1.stderr:
+    print(p1.stderr)
 
 print()
 
@@ -23,7 +24,8 @@ p2 = subprocess.run(
 )
 assert p2.returncode == 0
 print(p2.stdout)
-print(p2.stderr)
+if p2.stderr:
+    print(p2.stderr)
 
 with open(RESULT_RHS_EVALS_FILENAME, "w") as fh:
     fh.write(p1.stdout)
