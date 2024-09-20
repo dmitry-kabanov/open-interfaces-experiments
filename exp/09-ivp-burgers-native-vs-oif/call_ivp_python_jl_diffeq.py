@@ -110,20 +110,6 @@ def measure_perf_once(N):
 
 
 def main():
-    if not data_are_present():
-        compute()
-    else:
-        process()
-
-
-def data_are_present():
-    if os.path.isfile(RESULT_JL_DIFFEQ_PYTHON_FILENAME):
-        return True
-
-    return False
-
-
-def compute():
     # Run once to warm up the Julia's interpreter
     measure_perf_once(RESOLUTIONS_LIST[0])
 
@@ -157,13 +143,10 @@ def compute():
         writer.writerow(["jl-openif-numba-v3"] + runtimes)
 
     print(f"Data are written to {RESULT_JL_DIFFEQ_PYTHON_FILENAME}")
-    print("Finished")
-
-
-def process():
     subprocess.run(
         ["column", "-s,", "-t"], stdin=open(RESULT_JL_DIFFEQ_PYTHON_FILENAME)
     )
+    print("Finished")
 
 
 if __name__ == "__main__":
