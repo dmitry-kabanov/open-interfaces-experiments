@@ -8,6 +8,7 @@ DATA_CSV := \
 
 .PHONY : all
 all: rhs-evals runtimes
+	@echo
 
 .PHONY : rhs-evals
 rhs-evals : $(DATA_TXT)
