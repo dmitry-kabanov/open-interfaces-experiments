@@ -19,9 +19,7 @@ RESOLUTIONS_LIST = [800, 1600, 3200]
 N_RUNS = 30
 
 OUTDIR = get_outdir()
-RESULT_JL_DIFFEQ_PYTHON_FILENAME = (
-    OUTDIR / "runtime_vs_resolution_python_jl_diffeq_numba.csv"
-)
+RESULT_JL_DIFFEQ_PYTHON_FILENAME = OUTDIR / "runtime_vs_resolution_python_jl_diffeq.csv"
 
 
 # Note that `nopython=True` is default since Numba 0.59.
