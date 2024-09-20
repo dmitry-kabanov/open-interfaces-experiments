@@ -55,6 +55,16 @@ def compute_rhs_oif_numba_v3(__, u: np.ndarray, udot: np.ndarray, p) -> None:
     udot[-1] = dx_inv * (f_hat_prev - f_hat_rb)
 
 
+def get_wrapper_for_compute_rhs_native(dx, N):
+    p = (dx,)
+    udot = np.empty(N)
+
+    def compute_rhs_ode_wrapper(t, u):
+        return compute_rhs_oif_numba_v3(t, u, udot, p)
+
+    return compute_rhs_ode_wrapper
+
+
 @dataclasses.dataclass
 class Args:
     impl: str
@@ -82,6 +92,10 @@ def measure_perf_once(N):
     p = (problem.dx,)
 
     oif_rhs_numba = compute_rhs_oif_numba_v3
+    native_rhs = problem.compute_rhs_scipy_ode
+    native_rhs = get_wrapper_for_compute_rhs_native(problem.dx, len(y0))
+
+    oif_rhs_numba(0.0, y0, np.empty_like(y0), p)
 
     if impl == "native":
         s = integrate.ode(problem.compute_rhs_scipy_ode)

@@ -2,6 +2,7 @@ import time
 
 import numba as nb
 import numpy as np
+import numpy.testing as npt
 
 from common import BurgersEquationProblem
 from helpers import compute_mean_and_ci
