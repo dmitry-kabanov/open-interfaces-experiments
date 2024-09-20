@@ -55,14 +55,20 @@ def compute_rhs_oif_numba_v3(__, u: np.ndarray, udot: np.ndarray, p) -> None:
     udot[-1] = dx_inv * (f_hat_prev - f_hat_rb)
 
 
-def get_wrapper_for_compute_rhs_native(dx, N):
-    p = (dx,)
-    udot = np.empty(N)
+class ComputeRHSScipyWrapper:
+    def __init__(self, dx, N):
+        self.p = (dx,)
+        self.udot = np.empty(N)
+        self.rhs_evals = 0
 
-    def compute_rhs_ode_wrapper(t, u):
-        return compute_rhs_oif_numba_v3(t, u, udot, p)
+    def compute_rhs_ode_wrapper(self, t, u):
+        self.rhs_evals += 1
+        compute_rhs_oif_numba_v3(t, u, self.udot, self.p)
+        return self.udot
 
-    return compute_rhs_ode_wrapper
+    def compute_rhs_oif(self, t, u, udot, p):
+        self.rhs_evals += 1
+        compute_rhs_oif_numba_v3(t, u, udot, p)
 
 
 @dataclasses.dataclass
@@ -91,21 +97,19 @@ def measure_perf_once(N):
     y0 = problem.u0
     p = (problem.dx,)
 
-    oif_rhs_numba = compute_rhs_oif_numba_v3
-    native_rhs = problem.compute_rhs_scipy_ode
-    native_rhs = get_wrapper_for_compute_rhs_native(problem.dx, len(y0))
+    wrapper = ComputeRHSScipyWrapper(problem.dx, len(y0))
 
-    oif_rhs_numba(0.0, y0, np.empty_like(y0), p)
+    compute_rhs_oif_numba_v3(0.0, y0, np.empty_like(y0), p)
 
     if impl == "native":
-        s = integrate.ode(problem.compute_rhs_scipy_ode)
+        s = integrate.ode(wrapper.compute_rhs_ode_wrapper)
         s.set_initial_value(y0, t0)
         s.set_integrator("dopri5", rtol=1e-6, atol=1e-12)
     else:
         s = IVP(impl)
         s.set_initial_value(y0, t0)
         s.set_user_data(p)
-        s.set_rhs_fn(oif_rhs_numba)
+        s.set_rhs_fn(wrapper.compute_rhs_oif)
         s.set_tolerances(1e-6, 1e-12)
         assert impl == "jl_diffeq"
         s.set_integrator("DP5")
@@ -119,6 +123,17 @@ def measure_perf_once(N):
     toc = time.perf_counter()
     runtime = toc - tic
     solution_last = s.y
+    print("Leftmost point:", solution_last[0])
+    # s.set_tolerances(1e-2, 1e-2)
+
+    if impl == "native":
+        print("RHS evaluations:", problem.rhs_evals)
+        print("RHS rhs_evals:", wrapper.rhs_evals)
+    else:
+        # Hacked jl_diffeq implementation prints statistics about solver.
+        s.set_tolerances(1e-2, 1e-2)
+
+    print("Wrapper.rhs_evals =", wrapper.rhs_evals)
 
     return runtime, problem.x, problem.u0, solution_last
 
