@@ -52,6 +52,26 @@ function compute_rhs_v2(udot::Vector{Float64}, u::Vector{Float64}, p::Tuple, t::
     udot[end] = dx_inv * (f_hat_prev - f_hat_rb)
 end
 
+function compute_rhs_v3(udot, u, p, t)
+    dx, = p
+    dx⁻¹ = inv(dx)
+
+    c = maximum(abs, u)  # Local sound speed
+    local_ss_rb = max(abs(u[1]), abs(u[end]))
+
+    f_cur = 0.5 * u[1]^2
+    f̂_lb = 0.5 * (f_cur + 0.5 * u[end]^2) - 0.5 * local_ss_rb * (u[1] - u[end])
+    f̂_prev = f̂_lb
+    @inbounds for i = 1:length(udot)-1
+        f_next = 0.5 * u[i+1]^2
+        f̂_cur = 0.5 * ((f_cur+f_next) - c * (u[i+1]-u[i]))
+        udot[i] = dx⁻¹ * (f̂_prev - f̂_cur)
+        f̂_prev, f_cur = f̂_cur, f_next
+    end
+    f̂_rb = f̂_lb
+    udot[end] = dx⁻¹ * (f̂_prev - f̂_rb)
+end
+
 function runtime_stats(elapsed_times)
     runtime_mean = mean(elapsed_times)
     runtime_std = std(elapsed_times; corrected=true, mean=runtime_mean)
@@ -80,6 +100,7 @@ function measure()
     udot = similar(u0)
     udot_test_plain = similar(u0)
     udot_test_optim = similar(u0)
+    udot_test_v3 = similar(u0)
     u = rand(N + 1, N_RUNS)
     for j = 1:N_RUNS
         u[:, j] = u0
@@ -101,7 +122,7 @@ function measure()
         push!(values_plain, elapsed)
     end
     mean, ci = runtime_stats(values_plain)
-    print_runtime("Julia, plain version", mean, ci)
+    print_runtime("Julia, v1", mean, ci)
 
     # Timing the optimized version
     values_optim = []
@@ -116,9 +137,26 @@ function measure()
         push!(values_optim, elapsed)
     end
     mean, ci = runtime_stats(values_optim)
-    print_runtime("Julia, optimized version", mean, ci)
+    print_runtime("Julia, v1", mean, ci)
 
     @test udot_test_plain ≈ udot_test_optim rtol=1e-14 atol=1e-14
+
+    # Timing the optimized version
+    values_optim = []
+    compute_rhs_v3(udot_test_v3, u[:, 1], (dx,), 0.0)
+    for t = 1:N_TRIALS
+        tic = time_ns()
+        for j = 1:N_RUNS
+            compute_rhs_v2(udot, u[:, j], (dx,), 0.0)
+        end
+        toc = time_ns()
+        elapsed = (toc - tic) / 1e9
+        push!(values_optim, elapsed)
+    end
+    mean, ci = runtime_stats(values_optim)
+    print_runtime("Julia, v3", mean, ci)
+
+    @test udot_test_plain ≈ udot_test_v3 rtol=1e-14 atol=1e-14
     @printf "Leftmost udot value: %.16f\n" udot[1]
 end
 
