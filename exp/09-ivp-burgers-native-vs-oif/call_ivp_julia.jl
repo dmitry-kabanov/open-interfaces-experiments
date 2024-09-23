@@ -130,6 +130,8 @@ function measure_perf_once(N)
         end
         toc = time_ns()
         runtimes[v] = toc - tic
+
+        println("2nd left solution point is ", solution_last_1[1])
     end
 
     return runtimes, solution_last_1
@@ -173,7 +175,7 @@ function main()
             runtime_mean, ci = runtime_stats(elapsed_times[v])
             @printf "--- Resolution %d, version %s\n" N v
             @printf "    Runtime, sec: %.3f ± %.3f\n" runtime_mean ci
-            @printf "Solution second point from the left value: %.16f\n" solution_last_1[1]
+            @printf "Solution second point from the left value: %.16f\n" solution_last_1[2]
 
             val = @sprintf "%.2f ± %.2f" runtime_mean ci
             push!(column, val)
