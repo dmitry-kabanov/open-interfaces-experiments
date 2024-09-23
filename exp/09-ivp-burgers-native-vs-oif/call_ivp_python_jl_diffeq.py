@@ -23,6 +23,7 @@ N_RUNS = 30
 
 OUTDIR = get_outdir()
 RESULT_JL_DIFFEQ_PYTHON_FILENAME = OUTDIR / "runtime_vs_resolution_python_jl_diffeq.csv"
+RESULT_PYTHON_NATIVE_FILENAME = OUTDIR / "runtime_vs_resolution_python_native.csv"
 
 
 # Note that `nopython=True` is default since Numba 0.59.
@@ -174,18 +175,25 @@ def main():
 
         table[N] = f"{mean:.2f} ± {ci:.2f}"
 
-    with open(RESULT_JL_DIFFEQ_PYTHON_FILENAME, "w", encoding="utf-8") as fh:
+    args = _parse_args()
+    if args.impl == "jl_diffeq":
+        filename = RESULT_JL_DIFFEQ_PYTHON_FILENAME
+        desc = "jl-openif-numba-v3"
+    else:
+        assert args.impl == "native"
+        filename = RESULT_PYTHON_NATIVE_FILENAME
+        desc = "py-native-numba-v3"
+
+    with open(filename, "w", encoding="utf-8") as fh:
         writer = csv.writer(fh)
         writer.writerow(["method/resolution"] + RESOLUTIONS_LIST)
         runtimes = []
         for N in RESOLUTIONS_LIST:
             runtimes.append(table[N])
-        writer.writerow(["jl-openif-numba-v3"] + runtimes)
+        writer.writerow([desc] + runtimes)
 
-    print(f"Data are written to {RESULT_JL_DIFFEQ_PYTHON_FILENAME}")
-    subprocess.run(
-        ["column", "-s,", "-t"], stdin=open(RESULT_JL_DIFFEQ_PYTHON_FILENAME)
-    )
+    print(f"Data are written to {filename}")
+    subprocess.run(["column", "-s,", "-t"], stdin=open(filename))
     print("Finished")
 
 
