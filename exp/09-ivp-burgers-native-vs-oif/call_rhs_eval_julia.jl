@@ -137,7 +137,7 @@ function measure()
         push!(values_optim, elapsed)
     end
     mean, ci = runtime_stats(values_optim)
-    print_runtime("Julia, v1", mean, ci)
+    print_runtime("Julia, v2", mean, ci)
 
     @test udot_test_plain ≈ udot_test_optim rtol=1e-14 atol=1e-14
 
