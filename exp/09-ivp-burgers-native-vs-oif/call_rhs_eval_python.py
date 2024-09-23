@@ -16,12 +16,7 @@ def print_runtime(prefix, mean, ci):
     print(f"{prefix:32s} {mean:.3f} ± {ci:.3f}")
 
 
-# Note that `nopython=True` is default since Numba 0.59.
-@nb.jit(
-    # nb.types.void(nb.float64, nb.float64[:], nb.float64[:], nb.typeof((3.14,))),
-    boundscheck=False,
-    nogil=True,
-)
+# Note that JIT is applied below with different parameters.
 def compute_rhs_oif_numba_v3(__, u: np.ndarray, udot: np.ndarray, p) -> None:
     (dx,) = p
     N = u.shape[0]
