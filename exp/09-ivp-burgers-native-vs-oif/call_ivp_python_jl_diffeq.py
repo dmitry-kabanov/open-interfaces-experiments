@@ -15,6 +15,9 @@ from scipy import integrate
 from common import BurgersEquationProblem
 from helpers import get_outdir
 
+RTOL = 1e-6
+ATOL = 1e-12
+
 RESOLUTIONS_LIST = [800, 1600, 3200]
 N_RUNS = 30
 
@@ -91,7 +94,7 @@ def _parse_args():
 def measure_perf_once(N):
     args = _parse_args()
     impl = args.impl
-    print(f"Implementation: {impl}")
+    print(f"---Implementation: {impl}")
     problem = BurgersEquationProblem(N=N)
     t0 = 0.0
     y0 = problem.u0
@@ -104,36 +107,45 @@ def measure_perf_once(N):
     if impl == "native":
         s = integrate.ode(wrapper.compute_rhs_ode_wrapper)
         s.set_initial_value(y0, t0)
-        s.set_integrator("dopri5", rtol=1e-6, atol=1e-12)
+        s.set_integrator("dopri5", rtol=RTOL, atol=ATOL)
     else:
         s = IVP(impl)
         s.set_initial_value(y0, t0)
         s.set_user_data(p)
         s.set_rhs_fn(wrapper.compute_rhs_oif)
-        s.set_tolerances(1e-6, 1e-12)
+        s.set_tolerances(RTOL, ATOL)
         assert impl == "jl_diffeq"
         s.set_integrator("DP5")
 
     times = np.linspace(problem.t0, problem.tfinal, num=101)
 
+    n_rhs = 0
+    n_acc = 0
+    n_rej = 0
     s.set_initial_value(y0, t0)
     tic = time.perf_counter()
     for t in times[1:]:
         s.integrate(t)
+        if impl == "native":
+            # Read about this magic here:
+            # https://github.com/scipy/scipy/blob/main/scipy/integrate/dop/dopri5.f#L182
+            n_rhs += s._integrator.iwork[16]
+            n_acc += s._integrator.iwork[18]
+            n_rej += s._integrator.iwork[19]
     toc = time.perf_counter()
     runtime = toc - tic
     solution_last = s.y
     print("Leftmost point:", solution_last[0])
-    # s.set_tolerances(1e-2, 1e-2)
 
-    if impl == "native":
-        print("RHS evaluations:", problem.rhs_evals)
-        print("RHS rhs_evals:", wrapper.rhs_evals)
+    if hasattr(s, "print_stats") and impl != "native":
+        s.print_stats()
     else:
-        # Hacked jl_diffeq implementation prints statistics about solver.
-        s.set_tolerances(1e-2, 1e-2)
+        assert impl == "native"
+        print("    No. of RHS evaluations: ", n_rhs)
+        print("    No. of  accepted steps: ", n_acc)
+        print("    No. of  rejected steps: ", n_rej)
 
-    print("Wrapper.rhs_evals =", wrapper.rhs_evals)
+    print("Manual  RHS evals: ", wrapper.rhs_evals)
 
     return runtime, problem.x, problem.u0, solution_last
 
@@ -159,7 +171,6 @@ def main():
         sem = np.std(elapsed_times, ddof=1) / np.sqrt(len(elapsed_times))
         ci = 2.0 * sem  # Coefficient corresponds to the 95% Confidence Interval.
         print(f"Runtime, sec: {mean:.4f} ± {ci:.4f}")
-        print(f"Solution second point from the left value: {solution_last[1]:.16f}")
 
         table[N] = f"{mean:.2f} ± {ci:.2f}"
 
