@@ -132,10 +132,11 @@ def compute_rhs_oif_numba_v3(__, u: np.ndarray, udot: np.ndarray, p) -> None:
 
 
 def get_wrapper_for_compute_rhs_native(dx, N):
+    p = (dx,)
     udot = np.empty(N)
 
     def compute_rhs_ode_wrapper(t, u):
-        return compute_rhs_native_numba_v3(t, u, dx, udot)
+        return compute_rhs_native_numba_v3(t, u, udot, p)
 
     return compute_rhs_ode_wrapper
 
@@ -145,8 +146,9 @@ def get_wrapper_for_compute_rhs_native(dx, N):
     nogil=True,
 )
 def compute_rhs_native_numba_v3(
-    t: float, u: np.ndarray, dx: float, udot: np.ndarray
+    t: float, u: np.ndarray, udot: np.ndarray, p
 ) -> np.ndarray:
+    (dx,) = p
     N = u.shape[0]
 
     local_ss = 0.0
