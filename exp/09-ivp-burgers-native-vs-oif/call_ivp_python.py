@@ -1,4 +1,4 @@
-""" Assess performance of Open Interfaces in Python.
+"""Assess performance of Open Interfaces in Python.
 
 Compare solution of Burgers' equation using IVP interface versus solving
 directly via SciPy.
@@ -17,7 +17,7 @@ from helpers import get_outdir
 
 RESOLUTIONS_LIST = [800, 1600, 3200]
 RESOLUTIONS_LIST = [800, 1600]
-NUMBER_OF_RUNS = 2
+N_RUNS = 2
 VERSIONS = ["v1", "v2", "v3"]
 
 OUTDIR = get_outdir()
@@ -233,6 +233,7 @@ def measure_perf_once(N):
         toc = time.perf_counter()
         runtimes[version] = toc - tic
         oif_solution_1.append(s.y)
+        print(f"RHS {version:>6s}: leftmost point = {s.y[0]:.16f}")
 
     solver_ode = integrate.ode(compute_rhs_ode)
     solver_ode.set_integrator("dopri5", rtol=1e-6, atol=1e-12)
@@ -261,11 +262,14 @@ def main():
     numba_format_template = "py-openif-numba-{v}"
 
     for N in RESOLUTIONS_LIST:
+        print()
+        print(f"Resolution N = {N}")
+        print(f"Measure performance {N_RUNS} times")
         oif_time_list = {}
         for v in VERSIONS:
             oif_time_list[v] = []
         native_time_list = []
-        for k in range(NUMBER_OF_RUNS):
+        for k in range(N_RUNS):
             runtimes = measure_perf_once(N)
             for v in VERSIONS:
                 oif_time_list[v].append(runtimes[v])

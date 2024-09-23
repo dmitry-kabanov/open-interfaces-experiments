@@ -129,9 +129,12 @@ function measure_perf_once(N)
             solution_last_1 = solver.u
         end
         toc = time_ns()
+        @printf "RHS %s: RHS evals = %d\n" v solver.stats.nf
+        @printf "RHS %s: accepted  = %d\n" v solver.stats.naccept
+        @printf "RHS %s: rejected  = %d\n" v solver.stats.nreject
         runtimes[v] = toc - tic
 
-        println("2nd left solution point is ", solution_last_1[1])
+        @printf "RHS %s: leftmost point = %.16f\n" v solver.u[1]
     end
 
     return runtimes, solution_last_1
@@ -172,10 +175,10 @@ function main()
 
         column = [string(N)]
         for v in VERSIONS
-            runtime_mean, ci = runtime_stats(elapsed_times[v])
             @printf "--- Resolution %d, version %s\n" N v
-            @printf "    Runtime, sec: %.3f ± %.3f\n" runtime_mean ci
-            @printf "Solution second point from the left value: %.16f\n" solution_last_1[2]
+            runtime_mean, ci = runtime_stats(elapsed_times[v])
+            println("elapsed_times: ", elapsed_times)
+            @printf "Runtime, sec: %.3f ± %.3f\n" runtime_mean ci
 
             val = @sprintf "%.2f ± %.2f" runtime_mean ci
             push!(column, val)
