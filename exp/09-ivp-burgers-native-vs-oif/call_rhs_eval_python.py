@@ -9,6 +9,7 @@ from helpers import compute_mean_and_ci
 
 N_TRIALS = 30
 N_RUNS = 100_000
+N = 3200
 
 
 def print_runtime(prefix, mean, ci):
@@ -47,7 +48,7 @@ def compute_rhs_oif_numba_v3(__, u: np.ndarray, udot: np.ndarray, p) -> None:
     udot[-1] = dx_inv * (f_hat_prev - f_hat_rb)
 
 
-problem = BurgersEquationProblem(N=4000)
+problem = BurgersEquationProblem(N=N)
 
 u = np.random.random((N_RUNS, len(problem.u0)))
 for i in range(N_RUNS):

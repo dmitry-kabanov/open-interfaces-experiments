@@ -3,6 +3,7 @@ using Statistics
 
 N_TRIALS = 30
 N_RUNS = 100_000
+N = 3200
 
 
 function compute_rhs_v1(udot, u, p, t)
@@ -86,7 +87,6 @@ function print_runtime(prefix, mean, ci)
 end
 
 function measure()
-    N = 4000
     x = collect(range(0, 2, N + 1))
     dx = 2 / N
     u0 = 0.5 .- 0.25 * sin.(pi * x)
