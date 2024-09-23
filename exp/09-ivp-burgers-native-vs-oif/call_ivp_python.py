@@ -15,6 +15,9 @@ from scipy import integrate
 from common import BurgersEquationProblem
 from helpers import get_outdir
 
+RTOL = 1e-6
+ATOL = 1e-12
+
 RESOLUTIONS_LIST = [800, 1600, 3200]
 RESOLUTIONS_LIST = [800, 1600]
 N_RUNS = 2
@@ -184,7 +187,6 @@ def measure_perf_once(N):
     dx = problem.dx
 
     compute_rhs_ode = get_wrapper_for_compute_rhs_native(dx, len(y0))
-    # compute_rhs_ode = compute_rhs_ode_numba
 
     # Sanity check: Numba functions must return the same values as the NumPy one.
     result_0 = np.empty_like(y0)
@@ -193,38 +195,37 @@ def measure_perf_once(N):
     result_1 = np.empty_like(y0)
     result_2 = np.empty_like(y0)
     result_3 = np.empty_like(y0)
-    # result_4 = np.empty_like(y0)
     compute_rhs_oif_numba_v1(t0, y0, result_1, p)
     compute_rhs_oif_numba_v2(t0, y0, result_2, p)
     compute_rhs_oif_numba_v3(t0, y0, result_3, p)
-    # compute_rhs_oif_numba_v4(t0, y0, result_4, p)
 
     npt.assert_allclose(result_0, result_1, rtol=1e-14, atol=1e-14)
     npt.assert_allclose(result_0, result_2, rtol=1e-14, atol=1e-14)
     npt.assert_allclose(result_0, result_3, rtol=1e-14, atol=1e-14)
-    # npt.assert_allclose(result_0, result_4, rtol=1e-14, atol=1e-14)
 
     result_scipy_3 = compute_rhs_ode(t0, y0)
     npt.assert_allclose(result_0, result_scipy_3, rtol=1e-14, atol=1e-14)
 
     runtimes = {}
-    for version in VERSIONS:
-        s = IVP("scipy_ode")
-        s.set_initial_value(problem.u0, problem.t0)
-        s.set_user_data(p)
-        if version == "v1":
-            s.set_rhs_fn(compute_rhs_oif_numba_v1)
-        elif version == "v2":
-            s.set_rhs_fn(compute_rhs_oif_numba_v2)
-        elif version == "v3":
-            s.set_rhs_fn(compute_rhs_oif_numba_v3)
-        # elif version == "v4":
-        #     s.set_rhs_fn(compute_rhs_oif_numba_v4)
-        s.set_integrator("dopri5")
-        s.set_tolerances(rtol=1e-6, atol=1e-12)
+    for version in VERSIONS + ["native"]:
+        if version.startswith("v"):
+            s = IVP("scipy_ode")
+            s.set_initial_value(problem.u0, problem.t0)
+            s.set_user_data(p)
+            if version == "v1":
+                s.set_rhs_fn(compute_rhs_oif_numba_v1)
+            elif version == "v2":
+                s.set_rhs_fn(compute_rhs_oif_numba_v2)
+            elif version == "v3":
+                s.set_rhs_fn(compute_rhs_oif_numba_v3)
+            s.set_integrator("dopri5")
+            s.set_tolerances(RTOL, ATOL)
+        elif version == "native":
+            s = integrate.ode(compute_rhs_ode)
+            s.set_integrator("dopri5", rtol=RTOL, atol=ATOL)
+            s.set_initial_value(problem.u0, problem.t0)
 
         times = np.linspace(t0, problem.tfinal, num=101)
-        # # times = np.arange(t0, problem.tfinal + problem.dt_max, step=problem.dt_max)
 
         oif_solution_1 = [y0]
         tic = time.perf_counter()
@@ -234,22 +235,6 @@ def measure_perf_once(N):
         runtimes[version] = toc - tic
         oif_solution_1.append(s.y)
         print(f"RHS {version:>6s}: leftmost point = {s.y[0]:.16f}")
-
-    solver_ode = integrate.ode(compute_rhs_ode)
-    solver_ode.set_integrator("dopri5", rtol=1e-6, atol=1e-12)
-    solver_ode.set_initial_value(problem.u0, problem.t0)
-
-    native_solution = [problem.u0]
-    ode_tic = time.perf_counter()
-    for t in times[1:]:
-        solver_ode.integrate(t)
-    ode_toc = time.perf_counter()
-    native_time = ode_toc - ode_tic
-    native_solution.append(solver_ode.y)
-
-    runtimes["native"] = native_time
-
-    npt.assert_allclose(oif_solution_1[-1], native_solution[-1], rtol=1e-10, atol=1e-10)
 
     return runtimes
 
@@ -282,7 +267,7 @@ def main():
     with open(RESULT_PERF_FILENAME, "w") as fh:
         fh.write(
             "# method, resolution, "
-            + ", ".join([f"runtime{k:d}" for k in range(NUMBER_OF_RUNS)])
+            + ", ".join([f"runtime{k:d}" for k in range(N_RUNS)])
             + "\n"
         )
         for method in [numba_format_template.format(v=v) for v in VERSIONS]:
