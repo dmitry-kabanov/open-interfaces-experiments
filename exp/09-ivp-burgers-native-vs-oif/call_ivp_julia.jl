@@ -41,6 +41,7 @@ function measure_perf_once(N)
     times = collect(range(t0, tfinal, 101))
 
     runtimes = Dict()
+    solutions = Dict{String, Float64}()
 
     local solution_last_1::Vector{Float64}
     for v in VERSIONS
@@ -66,11 +67,11 @@ function measure_perf_once(N)
         @printf "RHS %s: accepted  = %d\n" v solver.stats.naccept
         @printf "RHS %s: rejected  = %d\n" v solver.stats.nreject
         runtimes[v] = toc - tic
-
-        @printf "RHS %s: leftmost point = %.16f\n" v solver.u[1]
+        @printf "%s leftmost point = %.16f\n" v solver.u[1]
+        solutions[v] = solver.u[1]
     end
 
-    return runtimes, solution_last_1
+    return runtimes, solutions
 end
 
 function main()
@@ -107,23 +108,27 @@ function main()
     for N in RESOLUTIONS_LIST
         @printf "Resolution %d: estimating runtime from %d runs\n" N N_RUNS
         elapsed_times = Dict()
+        local solutions::Dict{String, Float64}
         for v in VERSIONS
             elapsed_times[v] = []
         end
 
         for k = 1:N_RUNS
-            runtimes, solution_last_1 = measure_perf_once(N)
+            runtimes, solutions = measure_perf_once(N)
             for v in VERSIONS
                 push!(elapsed_times[v], runtimes[v] / 1e9)
             end
         end
 
+        @printf "--- Resolution %d\n" N
+        for v in VERSIONS
+            @printf "%-16s: leftmost point of solution = %.16f\n" v solutions[v]
+        end
+
         column = [string(N)]
         for v in VERSIONS
-            @printf "--- Resolution %d, version %s\n" N v
             runtime_mean, ci = runtime_stats(elapsed_times[v])
-            println("elapsed_times: ", elapsed_times)
-            @printf "Runtime, sec: %.3f ± %.3f\n" runtime_mean ci
+            @printf "%-16s: runtime, sec = %.2f ± %.2f\n" v runtime_mean ci
 
             val = @sprintf "%.2f ± %.2f" runtime_mean ci
             push!(column, val)
