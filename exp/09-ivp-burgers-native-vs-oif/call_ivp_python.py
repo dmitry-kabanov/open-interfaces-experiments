@@ -114,7 +114,7 @@ def measure_perf_once(N):
         toc = time.perf_counter()
         runtimes[version] = toc - tic
         oif_solution_1.append(s.y)
-        print(f"RHS {version:>6s}: leftmost point = {s.y[0]:.16f}")
+        print(f"RHS {version:>10s}: leftmost point = {s.y[0]:.16f}")
 
     return runtimes
 
@@ -147,7 +147,7 @@ def main():
         print()
         for v in VERSIONS + ["native"]:
             runtime_mean, ci = compute_mean_and_ci(elapsed_times[v])
-            print(f"Runtime {v:>6s}, sec: {runtime_mean:.3f} ± {ci:.3f}")
+            print(f"Runtime {v:>10s}, sec: {runtime_mean:.3f} ± {ci:.3f}")
             val = f"{runtime_mean:.2f} ± {ci:.2f}"
             table[methods[v]].append(val)
 
