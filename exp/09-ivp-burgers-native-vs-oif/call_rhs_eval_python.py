@@ -1,8 +1,13 @@
 import time
 
-import numba as nb
 import numpy as np
 import numpy.testing as npt
+from rhsversions import (
+    compute_rhs_oif_numba_v1,
+    compute_rhs_oif_numba_v2,
+    compute_rhs_oif_numba_v3,
+    compute_rhs_oif_numba_v4,
+)
 
 from common import BurgersEquationProblem
 from helpers import compute_mean_and_ci
@@ -14,33 +19,6 @@ N = 3200
 
 def print_runtime(prefix, mean, ci):
     print(f"{prefix:32s} {mean:.3f} ± {ci:.3f}")
-
-
-# Note that JIT is applied below with different parameters.
-def compute_rhs_oif_numba_v3(__, u: np.ndarray, udot: np.ndarray, p) -> None:
-    (dx,) = p
-    N = u.shape[0]
-
-    local_ss = 0.0
-    for i in range(N - 1):
-        cand = abs(u[i])
-        if cand > local_ss:
-            local_ss = cand
-    local_ss_rb = max(abs(u[0]), abs(u[-1]))
-
-    dx_inv = 1.0 / dx
-
-    f_cur = 0.5 * u[0] ** 2
-    f_hat_lb = 0.5 * (f_cur + 0.5 * u[-1] ** 2) - 0.5 * local_ss_rb * (u[0] - u[-1])
-    f_hat_prev = f_hat_lb
-    for i in range(N - 1):
-        f_next = 0.5 * u[i + 1] ** 2
-        f_hat_cur = 0.5 * ((f_cur + f_next) - local_ss * (u[i + 1] - u[i]))
-        udot[i] = dx_inv * (f_hat_prev - f_hat_cur)
-        f_hat_prev, f_cur = f_hat_cur, f_next
-
-    f_hat_rb = f_hat_lb
-    udot[-1] = dx_inv * (f_hat_prev - f_hat_rb)
 
 
 problem = BurgersEquationProblem(N=N)
@@ -71,46 +49,33 @@ mean, ci = compute_mean_and_ci(values_plain)
 print_runtime("Python + NumPy", mean, ci)
 
 # Timing optim version
-optim_1 = nb.jit(
-    nb.types.void(nb.float64, nb.float64[:], nb.float64[:], nb.typeof((3.14,))),
-    # nb.types.void(
-    #     nb.float64, nb.float64[:], nb.float64[:], nb.types.UniTuple(nb.float64, 1)
-    # ),
-    boundscheck=False,
-    nogil=True,
-)(compute_rhs_oif_numba_v3)
 
 values_optim = []
 p = (problem.dx,)
 udot_test_numba_1 = np.empty_like(u[0])
-optim_1(0.0, u[0], udot_test_numba_1, p)
+compute_rhs_oif_numba_v3(0.0, u[0], udot_test_numba_1, p)
 for k in range(N_TRIALS):
     tic = time.perf_counter()
     for j in range(N_RUNS):
-        optim_1(0.0, u[j], udot, p)
+        compute_rhs_oif_numba_v3(0.0, u[j], udot, p)
     toc = time.perf_counter()
     values_optim.append(toc - tic)
 mean, ci = compute_mean_and_ci(values_optim)
-print_runtime("Python + Numba v3, signature=yes", mean, ci)
+print_runtime("Python + Numba v3", mean, ci)
 
 # Timing optim version without signature.
-optim_2 = nb.jit(
-    boundscheck=False,
-    nogil=True,
-)(compute_rhs_oif_numba_v3)
-
 values_optim = []
 p = (problem.dx,)
 udot_test_numba_2 = np.empty_like(u[0])
-optim_2(0.0, u[0], udot_test_numba_2, p)
+compute_rhs_oif_numba_v4(0.0, u[0], udot_test_numba_2, p)
 for k in range(N_TRIALS):
     tic = time.perf_counter()
     for j in range(N_RUNS):
-        optim_2(0.0, u[j], udot, p)
+        compute_rhs_oif_numba_v4(0.0, u[j], udot, p)
     toc = time.perf_counter()
     values_optim.append(toc - tic)
 mean, ci = compute_mean_and_ci(values_optim)
-print_runtime("Python + Numba v3, signature=no", mean, ci)
+print_runtime("Python + Numba v4", mean, ci)
 
 npt.assert_allclose(udot_test_plain, udot_test_numba_1, rtol=1e-14, atol=1e-14)
 npt.assert_allclose(udot_test_plain, udot_test_numba_2, rtol=1e-14, atol=1e-14)
