@@ -1,6 +1,6 @@
 module RHSVersions
 
-export compute_rhs_v1, compute_rhs_v2, compute_rhs_v3, compute_rhs_v4
+export compute_rhs_v1, compute_rhs_v2, compute_rhs_v3, compute_rhs_v4, compute_rhs_v5
 
 
 function compute_rhs_v1(udot, u, p, t)
@@ -70,7 +70,7 @@ function compute_rhs_v3(udot, u, p, t)
     udot[end] = dx_inv * (f_hat_prev - f_hat_rb)
 end
 
-function compute_rhs_v4(udot::AbstractVector{T}, u::AbstractVector{T}, p::Tuple, t::T) where {T}
+@noinline function compute_rhs_v4(udot::AbstractVector{T}, u::AbstractVector{T}, p::Tuple, t::T) where {T}
     dx = p[1]  # Directly access the first element of the tuple.
     dx_inv = inv(dx)
     N = length(udot)
@@ -89,4 +89,25 @@ function compute_rhs_v4(udot::AbstractVector{T}, u::AbstractVector{T}, p::Tuple,
     end
     udot[N] = dx_inv * (f_hat_prev - f_hat_lb)
 end
+
+@inline function compute_rhs_v5(udot::AbstractVector{T}, u::AbstractVector{T}, p::Tuple, t::T) where {T}
+    dx = p[1]  # Directly access the first element of the tuple.
+    dx_inv = inv(dx)
+    N = length(udot)
+
+    c = maximum(abs, u)  # abs, u applies abs without creating a temp array.
+    local_ss_rb = max(abs(u[1]), abs(u[end]))
+
+    f_cur = T(0.5) * u[1]^2
+    f_hat_lb = T(0.5) * (f_cur + T(0.5) * u[N]^2) - T(0.5) * local_ss_rb * (u[1] - u[N])
+    f_hat_prev = f_hat_lb
+    @inbounds for i = 1:N-1
+        f_next = T(0.5) * u[i+1]^2
+        f_hat_cur = T(0.5) * ((f_cur+f_next) - c * (u[i+1]-u[i]))
+        udot[i] = dx_inv * (f_hat_prev - f_hat_cur)
+        f_hat_prev, f_cur = f_hat_cur, f_next
+    end
+    udot[N] = dx_inv * (f_hat_prev - f_hat_lb)
+end
+
 end

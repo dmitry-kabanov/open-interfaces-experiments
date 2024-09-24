@@ -61,7 +61,10 @@ function measure()
     udot_v2 = similar(u0)
     udot_v3 = similar(u0)
     udot_v4 = similar(u0)
+    udot_v5 = similar(u0)
     u = rand(N + 1, N_RUNS)
+    # We use deterministic input because in the end we print the leftmost
+    # value to compare with results from Python.
     for j = 1:N_RUNS
         u[:, j] = u0
     end
@@ -73,10 +76,12 @@ function measure()
     benchmark_this_version("v2", compute_rhs_v2, udot_v2, u, p)
     benchmark_this_version("v3", compute_rhs_v3, udot_v3, u, p)
     benchmark_this_version("v4", compute_rhs_v4, udot_v4, u, p)
+    benchmark_this_version("v5", compute_rhs_v5, udot_v5, u, p)
 
     @test udot_v1 ≈ udot_v2 rtol=1e-14 atol=1e-14
     @test udot_v1 ≈ udot_v3 rtol=1e-14 atol=1e-14
     @test udot_v1 ≈ udot_v4 rtol=1e-14 atol=1e-14
+    @test udot_v1 ≈ udot_v5 rtol=1e-14 atol=1e-14
     @printf "Leftmost udot value: %.16f\n" udot_v4[1]
 end
 
