@@ -25,6 +25,7 @@ PROG_1 = ["python", (EXPDIR / "call_ivp_python.py")]
 DATA_2_1 = OUTDIR / "runtime_vs_resolution_julia.csv"
 # DATA_2_2 = OUTDIR / "runtime_vs_resolution_julia_noinline.csv"
 DATA_2_3 = OUTDIR / "runtime_vs_resolution_python_jl_diffeq.csv"
+DATA_2_4 = OUTDIR / "runtime_vs_resolution_python_native.csv"
 
 PROG_2_1 = ["julia", EXPDIR / "call_ivp_julia.jl"]
 PROG_2_3 = ["python", EXPDIR / "call_jl_diffeq_from_python.py", "jl_diffeq"]
@@ -54,6 +55,10 @@ def process_3():
     print()
     print("Python via OIF call to `jl_diffeq` (Julia OrdinaryDiffEq.jl)")
     subprocess.run(["column", "-s,", "-t"], stdin=open(DATA_2_3, "r"))
+
+    print()
+    print("Python native to SciPy (sanity check)")
+    subprocess.run(["column", "-s,", "-t"], stdin=open(DATA_2_4, "r"))
 
 
 if __name__ == "__main__":
