@@ -10,7 +10,7 @@ include("../../helpers.jl")
 include("rhsversions.jl")
 using .RHSVersions
 
-VERSIONS = ["v1", "v2", "v3"]
+VERSIONS = ["v1", "v2", "v3", "v4", "v5"]
 RESOLUTIONS_LIST = [800, 1600, 3200]
 RESOLUTIONS_LIST = [800, 1600]
 N_RUNS = 2
@@ -50,6 +50,10 @@ function measure_perf_once(N)
             odeProblem = ODEProblem(compute_rhs_v2, u0, (t0, tfinal), (dx,))
         elseif v == "v3"
             odeProblem = ODEProblem(compute_rhs_v3, u0, (t0, tfinal), (dx,))
+        elseif v == "v4"
+            odeProblem = ODEProblem(compute_rhs_v4, u0, (t0, tfinal), (dx,))
+        elseif v == "v5"
+            odeProblem = ODEProblem(compute_rhs_v5, u0, (t0, tfinal), (dx,))
         end
         solver = init(odeProblem, DP5(); reltol = 1e-6, abstol = 1e-12, save_everystep=false)
         tic = time_ns()
@@ -75,18 +79,27 @@ function main()
     result_1 = similar(u)
     result_2 = similar(u)
     result_3 = similar(u)
+    result_4 = similar(u)
+    result_5 = similar(u)
     compute_rhs_v1(result_1, u, (dx,), 0.0)
     compute_rhs_v2(result_2, u, (dx,), 0.0)
     compute_rhs_v3(result_3, u, (dx,), 0.0)
+    compute_rhs_v4(result_4, u, (dx,), 0.0)
+    compute_rhs_v5(result_5, u, (dx,), 0.0)
     @test result_1 ≈ result_2 rtol=1e-14 atol=1e-14
     @test result_1 ≈ result_3 rtol=1e-14 atol=1e-14
+    @test result_1 ≈ result_4 rtol=1e-14 atol=1e-14
+    @test result_1 ≈ result_5 rtol=1e-14 atol=1e-14
 
     measure_perf_once(RESOLUTIONS_LIST[1])  # We need to warm up Julia
 
-    label_1 = @sprintf "%-30s" "jl-native-plain"
-    label_2 = @sprintf "%-30s" "jl-native-loops"
-    label_3 = @sprintf "%-30s" "jl-native-fused"
-    table = ["method/resolution", label_1, label_2, label_3]
+    label_1 = @sprintf "%-30s" "jl-native-v1"
+    label_2 = @sprintf "%-30s" "jl-native-v2"
+    label_3 = @sprintf "%-30s" "jl-native-v3"
+    label_4 = @sprintf "%-30s" "jl-native-v4"
+    label_5 = @sprintf "%-30s" "jl-native-v5"
+
+    table = ["method/resolution", label_1, label_2, label_3, label_4, label_5]
 
     solution_last_1 = []
     solution_last_2 = []
