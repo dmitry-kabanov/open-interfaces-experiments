@@ -17,10 +17,8 @@ rhs-evals : $(DATA_TXT)
 	@echo "---"
 	cat $<
 
-$(DATA_TXT) : $(exp)/run_rhs_eval.py
+$(DATA_TXT) : $(exp)/run_rhs_eval.py $(exp)/call_rhs_eval_python.py $(exp)/call_rhs_eval_julia.jl
 	python $<
-
-$(exp)/run_rhs_eval.py: $(exp)/call_rhs_eval_python.py $(exp)/call_rhs_eval_julia.jl
 
 .PHONY : runtimes
 runtimes : $(exp)/run.py $(DATA_CSV)

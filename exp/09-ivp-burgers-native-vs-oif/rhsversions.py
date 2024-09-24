@@ -54,7 +54,7 @@ def compute_rhs_oif_numba_v2(__, u: np.ndarray, udot: np.ndarray, p) -> None:
         f[i] = 0.5 * u[i] ** 2
 
     local_ss = 0.0
-    for i in range(N):
+    for i in range(N - 1):
         cand = abs(u[i])
         if cand > local_ss:
             local_ss = cand
@@ -79,7 +79,7 @@ def compute_rhs_fused_loops(__, u: np.ndarray, udot: np.ndarray, p) -> None:
     N = u.shape[0]
 
     local_ss = 0.0
-    for i in range(N):
+    for i in range(N - 1):
         cand = abs(u[i])
         if cand > local_ss:
             local_ss = cand
