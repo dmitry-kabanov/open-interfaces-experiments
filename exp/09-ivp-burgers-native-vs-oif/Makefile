@@ -14,6 +14,7 @@ all: rhs-evals runtimes
 .PHONY : rhs-evals
 rhs-evals : $(DATA_TXT)
 	@echo ""
+	@echo "---"
 	cat $<
 
 $(DATA_TXT) : $(exp)/run_rhs_eval.py
@@ -24,6 +25,7 @@ $(exp)/run_rhs_eval.py: $(exp)/call_rhs_eval_python.py $(exp)/call_rhs_eval_juli
 .PHONY : runtimes
 runtimes : $(exp)/run.py $(DATA_CSV)
 	@echo ""
+	@echo "---"
 	python $<
 
 $(exp)/_output/runtime_vs_resolution_python.csv : $(exp)/call_ivp_python.py

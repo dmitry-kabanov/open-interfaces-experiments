@@ -29,4 +29,5 @@ if p2.stderr:
 
 with open(RESULT_RHS_EVALS_FILENAME, "w") as fh:
     fh.write(p1.stdout)
+    fh.write("\n")
     fh.write(p2.stdout)

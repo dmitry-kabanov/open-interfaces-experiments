@@ -155,7 +155,7 @@ def main():
         writer = csv.writer(fh)
         writer.writerow(["# method"] + RESOLUTIONS_LIST)
         for method in methods.values():
-            writer.writerow([method] + table[method])
+            writer.writerow(["{:30s}".format(method)] + table[method])
 
 
 if __name__ == "__main__":

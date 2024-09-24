@@ -7,6 +7,7 @@ N_RUNS = 100_000
 N = 3200
 
 include("rhsversions.jl")
+using .RHSVersions
 
 function benchmark_this_version(version_name, func, udot, u, p)
     runtimes = []
@@ -76,7 +77,7 @@ function measure()
     @test udot_v1 ≈ udot_v2 rtol=1e-14 atol=1e-14
     @test udot_v1 ≈ udot_v3 rtol=1e-14 atol=1e-14
     @test udot_v1 ≈ udot_v4 rtol=1e-14 atol=1e-14
-    @printf "Leftmost udot value: %.16f" udot_v4[1]
+    @printf "Leftmost udot value: %.16f\n" udot_v4[1]
 end
 
 measure()

@@ -190,7 +190,7 @@ def main():
         runtimes = []
         for N in RESOLUTIONS_LIST:
             runtimes.append(table[N])
-        writer.writerow([desc] + runtimes)
+        writer.writerow(["{:30s}".format(desc)] + runtimes)
 
     print(f"Data are written to {filename}")
     subprocess.run(["column", "-s,", "-t"], stdin=open(filename))

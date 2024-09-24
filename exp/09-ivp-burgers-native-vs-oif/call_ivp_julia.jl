@@ -154,7 +154,10 @@ function main()
 
     measure_perf_once(RESOLUTIONS_LIST[1])  # We need to warm up Julia
 
-    table = ["method/resolution", "jl-native-plain", "jl-native-loops", "jl-native-fused"]
+    label_1 = @sprintf "%-30s" "jl-native-plain"
+    label_2 = @sprintf "%-30s" "jl-native-loops"
+    label_3 = @sprintf "%-30s" "jl-native-fused"
+    table = ["method/resolution", label_1, label_2, label_3]
 
     solution_last_1 = []
     solution_last_2 = []
