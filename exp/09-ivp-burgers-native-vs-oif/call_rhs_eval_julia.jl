@@ -73,9 +73,25 @@ function compute_rhs_v3(udot, u, p, t)
     udot[end] = dx_inv * (f_hat_prev - f_hat_rb)
 end
 
+function compute_rhs_v4(udot::AbstractVector{T}, u::AbstractVector{T}, p::Tuple, t::T) where {T}
+    dx = p[1]  # Directly access the first element of the tuple.
+    dx_inv = inv(dx)
+    N = length(udot)
+
+    c = maximum(abs, u)  # abs, u applies abs without creating a temp array.
+    local_ss_rb = max(abs(u[1]), abs(u[end]))
+
+    f_cur = T(0.5) * u[1]^2
+    f_hat_lb = T(0.5) * (f_cur + T(0.5) * u[N]^2) - T(0.5) * local_ss_rb * (u[1] - u[N])
+    f_hat_prev = f_hat_lb
+    @inbounds for i = 1:N-1
+        f_next = T(0.5) * u[i+1]^2
+        f_hat_cur = T(0.5) * ((f_cur+f_next) - c * (u[i+1]-u[i]))
+        udot[i] = dx_inv * (f_hat_prev - f_hat_cur)
+        f_hat_prev, f_cur = f_hat_cur, f_next
     end
-    f̂_rb = f̂_lb
-    udot[end] = dx⁻¹ * (f̂_prev - f̂_rb)
+    udot[N] = dx_inv * (f_hat_prev - f_hat_lb)
+end
 
 function benchmark_this_version(version_name, func, udot, u, p)
     runtimes = []
@@ -128,10 +144,8 @@ function measure()
     udot_v1 = similar(u0)
     udot_v2 = similar(u0)
     udot_v3 = similar(u0)
+    udot_v4 = similar(u0)
     u = rand(N + 1, N_RUNS)
-    for j = 1:N_RUNS
-        u[:, j] = u0
-    end
 
     @printf "Julia, accumulated runtime of %d RHS evals, statistics from %d trials\n" N_RUNS N_TRIALS
     @printf "Problem size is %d\n" length(udot)
@@ -139,9 +153,11 @@ function measure()
     benchmark_this_version("v1", compute_rhs_v1, udot_v1, u, p)
     benchmark_this_version("v2", compute_rhs_v2, udot_v2, u, p)
     benchmark_this_version("v3", compute_rhs_v3, udot_v3, u, p)
+    benchmark_this_version("v4", compute_rhs_v4, udot_v4, u, p)
 
     @test udot_v1 ≈ udot_v2 rtol=1e-14 atol=1e-14
     @test udot_v1 ≈ udot_v3 rtol=1e-14 atol=1e-14
+    @test udot_v1 ≈ udot_v4 rtol=1e-14 atol=1e-14
 end
 
 measure()
