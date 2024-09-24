@@ -4,6 +4,7 @@ Compare solution of Burgers' equation using IVP interface versus solving
 directly via SciPy.
 """
 
+import csv
 import time
 
 import numba as nb
@@ -13,7 +14,7 @@ from oif.interfaces.ivp import IVP
 from scipy import integrate
 
 from common import BurgersEquationProblem
-from helpers import get_outdir
+from helpers import compute_mean_and_ci, get_outdir
 
 RTOL = 1e-6
 ATOL = 1e-12
@@ -242,43 +243,39 @@ def measure_perf_once(N):
 def main():
     print("Comparing performance of Open Interfaces for IVP interface from Python")
 
-    table = {}
-
     numba_format_template = "py-openif-numba-{v}"
+    table = {}
+    methods = {}
+    for v in VERSIONS + ["native"]:
+        if v.startswith("v"):
+            methods[v] = numba_format_template.format(v=v)
+        else:
+            methods[v] = "py-native-numba-v3"
+        table[methods[v]] = []
 
     for N in RESOLUTIONS_LIST:
         print()
         print(f"Resolution N = {N}")
         print(f"Measure performance {N_RUNS} times")
-        oif_time_list = {}
-        for v in VERSIONS:
-            oif_time_list[v] = []
-        native_time_list = []
+        elapsed_times = {}
+        for v in VERSIONS + ["native"]:
+            elapsed_times[v] = []
         for k in range(N_RUNS):
             runtimes = measure_perf_once(N)
-            for v in VERSIONS:
-                oif_time_list[v].append(runtimes[v])
-            native_time_list.append(runtimes["native"])
+            for v in VERSIONS + ["native"]:
+                elapsed_times[v].append(runtimes[v])
 
-        for v in VERSIONS:
-            table[(numba_format_template.format(v=v), N)] = oif_time_list[v]
-        table[("py-native-numba-v3", N)] = native_time_list
+        for v in VERSIONS + ["native"]:
+            runtime_mean, ci = compute_mean_and_ci(elapsed_times[v])
+            print(f"Runtime, sec: {runtime_mean:.3f} ± {ci:.3f}")
+            val = f"{runtime_mean:.2f} ± {ci:.2f}"
+            table[methods[v]].append(val)
 
     with open(RESULT_PERF_FILENAME, "w") as fh:
-        fh.write(
-            "# method, resolution, "
-            + ", ".join([f"runtime{k:d}" for k in range(N_RUNS)])
-            + "\n"
-        )
-        for method in [numba_format_template.format(v=v) for v in VERSIONS]:
-            for N in RESOLUTIONS_LIST:
-                runtimes = ", ".join([f"{t:3f}" for t in table[method, N]])
-                fh.write(f"{method}, {N}, " + runtimes + "\n")
-
-        for method in ["py-native-numba-v3"]:
-            for N in RESOLUTIONS_LIST:
-                runtimes = ", ".join([f"{t:3f}" for t in table[method, N]])
-                fh.write(f"{method}, {N}, " + runtimes + "\n")
+        writer = csv.writer(fh)
+        writer.writerow(["# method"] + RESOLUTIONS_LIST)
+        for method in methods.values():
+            writer.writerow([method] + table[method])
 
 
 if __name__ == "__main__":

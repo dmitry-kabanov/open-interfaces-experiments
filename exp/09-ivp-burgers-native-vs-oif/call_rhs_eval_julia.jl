@@ -55,19 +55,24 @@ end
 
 function compute_rhs_v3(udot, u, p, t)
     dx, = p
-    dx⁻¹ = inv(dx)
+    dx_inv = inv(dx)
 
     c = maximum(abs, u)  # Local sound speed
     local_ss_rb = max(abs(u[1]), abs(u[end]))
 
     f_cur = 0.5 * u[1]^2
-    f̂_lb = 0.5 * (f_cur + 0.5 * u[end]^2) - 0.5 * local_ss_rb * (u[1] - u[end])
-    f̂_prev = f̂_lb
+    f_hat_lb = 0.5 * (f_cur + 0.5 * u[end]^2) - 0.5 * local_ss_rb * (u[1] - u[end])
+    f_hat_prev = f_hat_lb
     @inbounds for i = 1:length(udot)-1
         f_next = 0.5 * u[i+1]^2
-        f̂_cur = 0.5 * ((f_cur+f_next) - c * (u[i+1]-u[i]))
-        udot[i] = dx⁻¹ * (f̂_prev - f̂_cur)
-        f̂_prev, f_cur = f̂_cur, f_next
+        f_hat_cur = 0.5 * ((f_cur+f_next) - c * (u[i+1]-u[i]))
+        udot[i] = dx_inv * (f_hat_prev - f_hat_cur)
+        f_hat_prev, f_cur = f_hat_cur, f_next
+    end
+    f_hat_rb = f_hat_lb
+    udot[end] = dx_inv * (f_hat_prev - f_hat_rb)
+end
+
     end
     f̂_rb = f̂_lb
     udot[end] = dx⁻¹ * (f̂_prev - f̂_rb)

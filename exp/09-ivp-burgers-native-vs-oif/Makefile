@@ -4,7 +4,8 @@ DATA_TXT := $(exp)/_output/rhs_evals.txt
 DATA_CSV := \
     $(exp)/_output/runtime_vs_resolution_python.csv \
     $(exp)/_output/runtime_vs_resolution_julia.csv \
-    $(exp)/_output/runtime_vs_resolution_python_jl_diffeq.csv
+    $(exp)/_output/runtime_vs_resolution_python_jl_diffeq.csv \
+    $(exp)/_output/runtime_vs_resolution_python_native.csv
 
 .PHONY : all
 all: rhs-evals runtimes

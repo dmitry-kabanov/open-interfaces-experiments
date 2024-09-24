@@ -31,8 +31,6 @@ PROG_2_3 = ["python", EXPDIR / "call_jl_diffeq_from_python.py", "jl_diffeq"]
 
 DATA_3 = OUTDIR / "runtime_vs_resolution_julia_sundials.csv"
 
-RESULT_PYTHON_STATS = OUTDIR / "runtime_vs_resolution_python_stats.csv"
-
 
 def main():
     process_1()
@@ -41,51 +39,9 @@ def main():
 
 
 def process_1():
-    methods = []
-    resolutions = []
-    table = {}
-
-    with open(DATA_1, "r") as fh:
-        for line in fh.readlines():
-            if line.startswith("#"):
-                continue
-            chunks = line.split(",")
-            assert (
-                len(chunks) >= 3
-            ), "At least method, resolution and one runtime value are required"
-            method = chunks[0].strip()
-            N = int(chunks[1])
-            runtimes = [float(v) for v in chunks[2:]]
-
-            methods.append(method)
-            resolutions.append(N)
-            table[(method, N)] = runtimes
-
-    methods = list(set(methods))
-    methods.sort()
-    resolutions = list(set(resolutions))
-    resolutions.sort()
-    stats = {}
-
-    for method in methods:
-        runtimes = []
-        for N in resolutions:
-            values = table[(method, N)]
-            mean = np.mean(values)
-            err = 2 * np.std(values, ddof=1) / np.sqrt(len(values))
-            runtimes.append(f"{mean:.2f} ± {err:.2f}")
-
-        stats[method] = runtimes
-
-    with open(RESULT_PYTHON_STATS, "w") as fh:
-        writer = csv.writer(fh)
-        writer.writerow(["# method"] + resolutions)
-        for method in methods:
-            writer.writerow([method] + stats[method])
-
     print()
     print("Python native and via OIF: Scipy.integrate.ode.dopri5")
-    subprocess.run(["column", "-s,", "-t"], stdin=open(RESULT_PYTHON_STATS, "r"))
+    subprocess.run(["column", "-s,", "-t"], stdin=open(DATA_1, "r"))
 
 
 def process_2():
