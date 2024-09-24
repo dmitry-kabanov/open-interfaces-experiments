@@ -76,6 +76,27 @@ end
     end
     f̂_rb = f̂_lb
     udot[end] = dx⁻¹ * (f̂_prev - f̂_rb)
+
+function benchmark_this_version(version_name, func, udot, u, p)
+    runtimes = []
+    dx = p[1]
+
+    # Warm up the function under benchmark.
+    func(udot, u[:, 1], p, 0.0)
+
+    for t = 1:N_TRIALS
+        tic = time_ns()
+        for j = 1:N_RUNS
+            func(udot, u[:, j], (dx,), 0.0)
+        end
+        toc = time_ns()
+        elapsed = (toc - tic) / 1e9
+        push!(runtimes, elapsed)
+    end
+
+    mean, ci = runtime_stats(runtimes)
+    label = @sprintf "Julia, %s" version_name
+    print_runtime(label, mean, ci)
 end
 
 function runtime_stats(elapsed_times)
@@ -101,11 +122,12 @@ function measure()
 
     t0 = 0.0
     tfinal = 10.0
+    p = (dx, )
 
     udot = similar(u0)
-    udot_test_plain = similar(u0)
-    udot_test_optim = similar(u0)
-    udot_test_v3 = similar(u0)
+    udot_v1 = similar(u0)
+    udot_v2 = similar(u0)
+    udot_v3 = similar(u0)
     u = rand(N + 1, N_RUNS)
     for j = 1:N_RUNS
         u[:, j] = u0
@@ -114,55 +136,12 @@ function measure()
     @printf "Julia, accumulated runtime of %d RHS evals, statistics from %d trials\n" N_RUNS N_TRIALS
     @printf "Problem size is %d\n" length(udot)
 
-    # Timing the plain version
-    values_plain = []
-    compute_rhs_v1(udot_test_plain, u[:, 1], (dx,), 0.0)
-    for t = 1:N_TRIALS
-        tic = time_ns()
-        for j = 1:N_RUNS
-            compute_rhs_v1(udot, u[:, j], (dx,), 0.0)
-        end
-        toc = time_ns()
-        elapsed = (toc - tic) / 1e9
-        push!(values_plain, elapsed)
-    end
-    mean, ci = runtime_stats(values_plain)
-    print_runtime("Julia, v1", mean, ci)
+    benchmark_this_version("v1", compute_rhs_v1, udot_v1, u, p)
+    benchmark_this_version("v2", compute_rhs_v2, udot_v2, u, p)
+    benchmark_this_version("v3", compute_rhs_v3, udot_v3, u, p)
 
-    # Timing the optimized version
-    values_optim = []
-    compute_rhs_v2(udot_test_optim, u[:, 1], (dx,), 0.0)
-    for t = 1:N_TRIALS
-        tic = time_ns()
-        for j = 1:N_RUNS
-            compute_rhs_v2(udot, u[:, j], (dx,), 0.0)
-        end
-        toc = time_ns()
-        elapsed = (toc - tic) / 1e9
-        push!(values_optim, elapsed)
-    end
-    mean, ci = runtime_stats(values_optim)
-    print_runtime("Julia, v2", mean, ci)
-
-    @test udot_test_plain ≈ udot_test_optim rtol=1e-14 atol=1e-14
-
-    # Timing the optimized version
-    values_optim = []
-    compute_rhs_v3(udot_test_v3, u[:, 1], (dx,), 0.0)
-    for t = 1:N_TRIALS
-        tic = time_ns()
-        for j = 1:N_RUNS
-            compute_rhs_v2(udot, u[:, j], (dx,), 0.0)
-        end
-        toc = time_ns()
-        elapsed = (toc - tic) / 1e9
-        push!(values_optim, elapsed)
-    end
-    mean, ci = runtime_stats(values_optim)
-    print_runtime("Julia, v3", mean, ci)
-
-    @test udot_test_plain ≈ udot_test_v3 rtol=1e-14 atol=1e-14
-    @printf "Leftmost udot value: %.16f\n" udot[1]
+    @test udot_v1 ≈ udot_v2 rtol=1e-14 atol=1e-14
+    @test udot_v1 ≈ udot_v3 rtol=1e-14 atol=1e-14
 end
 
 measure()
