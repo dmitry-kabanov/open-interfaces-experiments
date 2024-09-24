@@ -33,7 +33,14 @@ $(exp)/_output/runtime_vs_resolution_julia.csv : $(exp)/call_ivp_julia.jl
 	julia $<
 
 $(exp)/_output/runtime_vs_resolution_python_jl_diffeq.csv : $(exp)/call_ivp_python_jl_diffeq.py
-	python $<
+	python $< jl_diffeq
+
+$(exp)/_output/runtime_vs_resolution_python_native.csv : $(exp)/call_ivp_python_jl_diffeq.py
+	python $< native
+
+$(exp)/call_rhs_eval_julia.jl: $(exp)/rhsversions.jl ../../helpers.jl
+
+$(exp)/call_rhs_eval_python.py: $(exp)/rhsversions.py ../../helpers.py
 
 .PHONY : clean
 clean :
