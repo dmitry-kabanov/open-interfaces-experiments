@@ -17,66 +17,65 @@ N_RUNS = 100_000
 N = 3200
 
 
+def get_wrapper_for_compute_rhs_oif():
+    def compute_rhs_wrapper(t, u_matrix, udot, p):
+        compute_rhs_oif_numba_v4(t, u_matrix, udot, p)
+
+    return compute_rhs_wrapper
+
+
 def print_runtime(prefix, mean, ci):
     print(f"{prefix:32s} {mean:.3f} ± {ci:.3f}")
 
 
-problem = BurgersEquationProblem(N=N)
+def benchmark_this(version_name, func, udot, u_matrix, p):
+    func(0.0, u_matrix[0], udot, p)
+    values = []
+    for k in range(N_TRIALS):
+        tic = time.perf_counter()
+        for j in range(N_RUNS):
+            func(0.0, u_matrix[j], udot, p)
+        toc = time.perf_counter()
+        values.append(toc - tic)
+    mean, ci = compute_mean_and_ci(values)
+    print_runtime(version_name, mean, ci)
 
-u = np.random.random((N_RUNS, len(problem.u0)))
-for i in range(N_RUNS):
-    u[i] = problem.u0
 
-udot = np.empty_like(problem.u0)
+def main():
+    problem = BurgersEquationProblem(N=N)
 
-print(
-    f"Python, accumulated runtime of {N_RUNS:n} RHS evals, "
-    f"statistics from {N_TRIALS:n} trials"
-)
-print(f"Problem size is {len(udot):n}")
+    u_matrix = np.random.random((N_RUNS, len(problem.u0)))
+    for i in range(N_RUNS):
+        u_matrix[i] = problem.u0
 
-# Timing plain version
-udot_test_plain = np.empty_like(problem.u0)
-problem.compute_rhs(0.0, u[0], udot_test_plain, None)
-values_plain = []
-for k in range(N_TRIALS):
-    tic = time.perf_counter()
-    for j in range(N_RUNS):
-        problem.compute_rhs(0.0, u[j], udot, None)
-    toc = time.perf_counter()
-    values_plain.append(toc - tic)
-mean, ci = compute_mean_and_ci(values_plain)
-print_runtime("Python + NumPy", mean, ci)
+    udot_v0 = np.empty_like(problem.u0)
+    udot_v1 = np.empty_like(u_matrix[0])
+    udot_v2 = np.empty_like(u_matrix[0])
+    udot_v3 = np.empty_like(u_matrix[0])
+    udot_v4 = np.empty_like(u_matrix[0])
 
-# Timing optim version
+    print(
+        f"Python, accumulated runtime of {N_RUNS:n} RHS evals, "
+        f"statistics from {N_TRIALS:n} trials"
+    )
+    print(f"Problem size is {len(udot_v0):n}")
 
-values_optim = []
-p = (problem.dx,)
-udot_test_numba_1 = np.empty_like(u[0])
-compute_rhs_oif_numba_v3(0.0, u[0], udot_test_numba_1, p)
-for k in range(N_TRIALS):
-    tic = time.perf_counter()
-    for j in range(N_RUNS):
-        compute_rhs_oif_numba_v3(0.0, u[j], udot, p)
-    toc = time.perf_counter()
-    values_optim.append(toc - tic)
-mean, ci = compute_mean_and_ci(values_optim)
-print_runtime("Python + Numba v3", mean, ci)
+    p = (problem.dx,)
+    compute_rhs_oif_numba_v0 = problem.compute_rhs
 
-# Timing optim version without signature.
-values_optim = []
-p = (problem.dx,)
-udot_test_numba_2 = np.empty_like(u[0])
-compute_rhs_oif_numba_v4(0.0, u[0], udot_test_numba_2, p)
-for k in range(N_TRIALS):
-    tic = time.perf_counter()
-    for j in range(N_RUNS):
-        compute_rhs_oif_numba_v4(0.0, u[j], udot, p)
-    toc = time.perf_counter()
-    values_optim.append(toc - tic)
-mean, ci = compute_mean_and_ci(values_optim)
-print_runtime("Python + Numba v4", mean, ci)
+    benchmark_this("Python + NumPy   ", compute_rhs_oif_numba_v0, udot_v0, u_matrix, p)
+    benchmark_this("Python + Numba v1", compute_rhs_oif_numba_v1, udot_v1, u_matrix, p)
+    benchmark_this("Python + Numba v2", compute_rhs_oif_numba_v2, udot_v2, u_matrix, p)
+    benchmark_this("Python + Numba v3", compute_rhs_oif_numba_v3, udot_v3, u_matrix, p)
+    benchmark_this("Python + Numba v4", compute_rhs_oif_numba_v4, udot_v4, u_matrix, p)
 
-npt.assert_allclose(udot_test_plain, udot_test_numba_1, rtol=1e-14, atol=1e-14)
-npt.assert_allclose(udot_test_plain, udot_test_numba_2, rtol=1e-14, atol=1e-14)
-print(f"Leftmost udot value: {udot[0]:.16f}")
+    npt.assert_allclose(udot_v0, udot_v1, rtol=1e-14, atol=1e-14)
+    npt.assert_allclose(udot_v0, udot_v2, rtol=1e-14, atol=1e-14)
+    npt.assert_allclose(udot_v0, udot_v3, rtol=1e-14, atol=1e-14)
+    npt.assert_allclose(udot_v0, udot_v4, rtol=1e-14, atol=1e-14)
+
+    print(f"Leftmost udot value: {udot_v0[0]:.16f}")
+
+
+if __name__ == "__main__":
+    main()
