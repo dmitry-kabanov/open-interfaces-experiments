@@ -28,7 +28,7 @@ function benchmark_this_version(version_name, func, udot, u, p)
             elapsed = (toc - tic) / 1e9
             push!(runtimes, elapsed)
         end
-    elseif version_name == "cwrapper"
+    elseif version_name == "cwrapper-oif" || version_name == "cwrapper-carray"
         # Warm up the function under benchmark.
         func(0.0, u[:, 1], udot, p)
         for t = 1:N_TRIALS
@@ -75,9 +75,12 @@ function measure()
     p = (dx, )
 
     libhandle = Libdl.dlopen("burgers.so")
-    compute_rhs_fn = Libdl.dlsym(libhandle, "rhs")
-    println(compute_rhs_fn)
-    compute_rhs_wrapper = CallbackWrapper.make_wrapper_over_c_callback(compute_rhs_fn)
+    compute_rhs_oif_fn = Libdl.dlsym(libhandle, "rhs_oif")
+    compute_rhs_carray_fn = Libdl.dlsym(libhandle, "rhs_carray")
+    println(compute_rhs_oif_fn)
+    println(compute_rhs_carray_fn)
+    compute_rhs_oif_wrapper = CallbackWrapper.make_wrapper_over_oif_c_callback(compute_rhs_oif_fn)
+    compute_rhs_carray_wrapper = CallbackWrapper.make_wrapper_over_carray_c_callback(compute_rhs_carray_fn)
 
     udot = similar(u0)
     udot_v1 = similar(u0)
@@ -85,7 +88,8 @@ function measure()
     udot_v3 = similar(u0)
     udot_v4 = similar(u0)
     udot_v5 = similar(u0)
-    udot_cwrapper = similar(u0)
+    udot_oif_cwrapper = similar(u0)
+    udot_carray_cwrapper = similar(u0)
     u = rand(N + 1, N_RUNS)
     # We use deterministic input because in the end we print the leftmost
     # value to compare with results from Python.
@@ -97,11 +101,14 @@ function measure()
     @printf "Problem size is %d\n" length(udot)
 
     benchmark_this_version("v5", compute_rhs_v5, udot_v5, u, p)
-    benchmark_this_version("cwrapper", compute_rhs_wrapper, udot_cwrapper, u, p)
+    benchmark_this_version("cwrapper-oif", compute_rhs_oif_wrapper, udot_oif_cwrapper, u, p)
+    benchmark_this_version("cwrapper-carray", compute_rhs_carray_wrapper, udot_carray_cwrapper, u, p)
 
-    @test udot_v5 ≈ udot_cwrapper rtol=1e-14 atol=1e-14
+    @test udot_v5 ≈ udot_oif_cwrapper rtol=1e-14 atol=1e-14
+    @test udot_v5 ≈ udot_carray_cwrapper rtol=1e-14 atol=1e-14
     @printf "Leftmost udot_1 value: %.16f\n" udot_v5[1]
-    @printf "Leftmost udot_2 value: %.16f\n" udot_cwrapper[1]
+    @printf "Leftmost udot_2 value: %.16f\n" udot_oif_cwrapper[1]
+    @printf "Leftmost udot_3 value: %.16f\n" udot_carray_cwrapper[1]
 end
 
 measure()
