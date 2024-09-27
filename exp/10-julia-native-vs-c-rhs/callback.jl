@@ -25,7 +25,7 @@ function make_wrapper_over_oif_c_callback(fn_c::Ptr{Cvoid})::Function
 end
 
 function make_wrapper_over_carray_c_callback(fn_c::Ptr{Cvoid})::Function
-    function wrapper(t, y, ydot, user_data)::Int
+    function wrapper(t::Float64, y::Vector{Float64}, ydot::Vector{Float64}, user_data::Tuple)::Int
         if typeof(user_data) == SciMLBase.NullParameters
             user_data = C_NULL
         elseif user_data isa Tuple

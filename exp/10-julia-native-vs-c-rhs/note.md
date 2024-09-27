@@ -20,3 +20,35 @@ His idea is that maybe the wrapped `$ccall` in Julia is not that cheap.
 
 
 ## Results
+
+I wrote two versions of the function: the one that works with OIFArrayF64
+and another that works directly with C arrays.
+
+I compiled the C library with `-march=native -O3`.
+
+Base performance:
+```
+Julia, accumulated runtime of 41000 RHS evals, statistics from 30 trials
+Problem size is 3201
+Julia, v5                        0.318 ± 0.031
+Julia, cwrapper-oif              0.442 ± 0.002
+Julia, cwrapper-carray           0.439 ± 0.003
+Leftmost udot_1 value: -0.0982710900737871
+Leftmost udot_2 value: -0.0982710900737871
+Leftmost udot_3 value: -0.0982710900737871
+```
+We can see that the difference between `cwrapper-oif` and `cwrapper-carray` is
+negligible.
+
+Then for the version that works with C arrays, I have added `restrict`
+and `const` to signature, it helps a bit:
+```
+Julia, accumulated runtime of 41000 RHS evals, statistics from 30 trials
+Problem size is 3201
+Julia, v5                        0.314 ± 0.036
+Julia, cwrapper-oif              0.441 ± 0.001
+Julia, cwrapper-carray           0.394 ± 0.002
+Leftmost udot_1 value: -0.0982710900737871
+Leftmost udot_2 value: -0.0982710900737871
+Leftmost udot_3 value: -0.0982710900737871
+```

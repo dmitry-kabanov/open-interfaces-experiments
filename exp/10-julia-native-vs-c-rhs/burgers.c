@@ -49,18 +49,18 @@ rhs_oif(double t, OIFArrayF64 *y, OIFArrayF64 *rhs_out, void *user_data)
 
 
 int
-rhs_carray(double t, double *y, double *rhs_out, void *user_data, size_t N)
+rhs_carray(double t, const double *const y, double *restrict rhs_out, void *restrict user_data, size_t N)
 {
     (void)t;         /* Unused */
 
-    double *u = y;
+    const double *const u = y;
     double *udot = rhs_out;
 
     double dx = *((double *)user_data);
     double dx_inv = 1.0 / dx;
 
-    double local_sound_speed = 0.0;
-    for (int i = 0; i < N; ++i) {
+    double local_sound_speed = fabs(u[0]);
+    for (int i = 1; i < N; ++i) {
         if (local_sound_speed < fabs(u[i])) {
             local_sound_speed = fabs(u[i]);
         }
