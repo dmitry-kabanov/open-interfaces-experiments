@@ -1,7 +1,9 @@
+CC := /usr/bin/clang
 CFLAGS := \
     -I$(OIF_DIR)/oif/include \
 	-I$(OIF_DIR)/oif/interfaces/c/include/ \
 	-O3 \
+	-g \
 	-march=native \
 	-mtune=native -fomit-frame-pointer -funroll-loops -fno-math-errno -fno-trapping-math -fno-signaling-nans
 
