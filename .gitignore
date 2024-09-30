@@ -3,6 +3,15 @@ oif-notebook/_build/
 # These notes must be symlinks from the actual notes.
 oif-notebook/exp/**/note.md
 
+# ------------------------------ BEGIN callgrind ------------------------------
+cachegrind.out.*
+callgrind.out.*
+# ------------------------------- END callgrind -------------------------------
+
+# ------------------------------ BEGIN C compilation --------------------------
+compile_commands.json
+# ------------------------------- END C compilation ---------------------------
+
 # ------------------------------ BEGIN Python ---------------------------------
 # Byte-compiled / optimized / DLL files
 __pycache__/
