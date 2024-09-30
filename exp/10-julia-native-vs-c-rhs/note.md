@@ -1,4 +1,4 @@
-# Exp10: Comparison of Julia ODE solution: native RHS vs RHS from C
+# 10 Comparison of Julia ODE solution: native RHS vs RHS from C
 
 ## Goal
 
@@ -52,3 +52,42 @@ Leftmost udot_1 value: -0.0982710900737871
 Leftmost udot_2 value: -0.0982710900737871
 Leftmost udot_3 value: -0.0982710900737871
 ```
+
+I have switched to Clang 14 and magically, the performance in C became
+almost as good as in Julia:
+```
+Julia, accumulated runtime of 41000 RHS evals, statistics from 30 trials
+Problem size is 3201
+Julia, v5                        0.310 ± 0.029
+Julia, cwrapper-oif              0.330 ± 0.001
+Julia, cwrapper-carray           0.328 ± 0.001
+Leftmost udot_1 value: -0.0982710900737871
+Leftmost udot_2 value: -0.0982710900737871
+```
+
+C wrappers are six percent slower than the Julia's magic.
+This was the moment where I have stopped optimizing this as it is good enough.
+
+### Solving ODEs
+
+Using the above right-hand sides, I solve the initial-value problem.
+
+I wrap C-wrappers one more time to match the signature expected by the
+`OrdinaryDiffEq.jl`.
+So it is basically now a Julia function that calls a Julia function that calls
+a C function - one less step than with OIF+Python where the C function
+is calling the underlying Python function.
+
+Each problem is solved 30 times to compute statistics.
+Each right-hand side was called once before the trial to compile.
+
+The results are the following:
+```
+Solving ODEs, statistics from 30 trials
+Problem size is 3201
+Julia, v5                        0.346 ± 0.003
+Julia, cwrapper-oif              0.380 ± 0.003
+Julia, cwrapper-carray           0.372 ± 0.003
+```
+which shows that with C wrapper it is a 10% penalty for OIF wrapper and
+8 percent penalty for C-arrays wrapper.
