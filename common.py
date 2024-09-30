@@ -58,3 +58,8 @@ class BurgersEquationProblem:
     def compute_rhs_scipy_ode(self, t, u: np.ndarray) -> np.ndarray:
         self.compute_rhs(t, u, self.udot, None)
         return self.udot
+
+    def compute_rhs_scipy_new_udot_each_time(self, t, u: np.ndarray) -> np.ndarray:
+        udot = np.empty_like(u)
+        self.compute_rhs(t, u, udot, None)
+        return udot
