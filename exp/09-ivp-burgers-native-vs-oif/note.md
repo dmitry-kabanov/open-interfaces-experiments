@@ -73,39 +73,53 @@ Somehow, I had first Numba with 1.3 seconds; during the development
 it became 0.690 which is super suspicious.
 
 ```
-------------------------------------------------------------------
-Python OIF vs Native
-# method                     800          1600         3200
-numba-python-native-scipyxx  0.05 ± 0.00  0.16 ± 0.00  0.61 ± 0.00
-numba-python-oif-scipy       0.05 ± 0.00  0.15 ± 0.00  0.58 ± 0.00
+---
+cat _output/rhs_evals.txt
+Python, accumulated runtime of 41000 RHS evals, statistics from 30 trials
+Problem size is 3201
+Python + NumPy                   2.020 ± 0.021
+Python + Numba v1                0.542 ± 0.005
+Python + Numba v2                0.320 ± 0.005
+Python + Numba v3                0.332 ± 0.003
+Python + Numba v4                0.229 ± 0.001
+Leftmost udot value: -0.0982710900737871
 
-------------------------------------------------------------------
-Julia OIF from Python vs Native
+Julia, accumulated runtime of 41000 RHS evals, statistics from 30 trials
+Problem size is 3201
+Julia, v1                        1.578 ± 0.033
+Julia, v2                        0.332 ± 0.002
+Julia, v3                        0.300 ± 0.002
+Julia, v4                        0.302 ± 0.002
+Julia, v5                        0.301 ± 0.002
+Leftmost udot value: -0.0982710900737871
 
-method/resolution            800          1600         3200
-@inline step!                0.15 ± 0.02  0.48 ± 0.00  1.83 ± 0.07
-@inline solve                0.14 ± 0.00  0.48 ± 0.00  1.84 ± 0.06
-@noinline step!              0.14 ± 0.00  0.48 ± 0.00  1.78 ± 0.04
-@noinline solve              0.14 ± 0.00  0.50 ± 0.04  1.83 ± 0.07
+---
+python run.py
 
-numba-julia-oif-from-python  0.10 ± 0.00  0.24 ± 0.00  0.72 ± 0.01
+Python native and via OIF: Scipy.integrate.ode.dopri5
+# method                        200          400          800          1600         3200
+py-openif-numba-v1              0.01 ± 0.00  0.03 ± 0.00  0.06 ± 0.00  0.21 ± 0.00  0.82 ± 0.01
+py-openif-numba-v2              0.01 ± 0.00  0.02 ± 0.00  0.05 ± 0.00  0.15 ± 0.00  0.58 ± 0.00
+py-openif-numba-v3              0.01 ± 0.00  0.02 ± 0.00  0.05 ± 0.00  0.16 ± 0.00  0.59 ± 0.00
+py-openif-numba-v4              0.01 ± 0.00  0.02 ± 0.00  0.04 ± 0.00  0.13 ± 0.00  0.49 ± 0.00
+py-openif-numba-v4+wrapper      0.01 ± 0.00  0.02 ± 0.00  0.04 ± 0.00  0.14 ± 0.00  0.50 ± 0.00
+py-native-numba-v3              0.01 ± 0.00  0.01 ± 0.00  0.04 ± 0.00  0.13 ± 0.00  0.49 ± 0.01
 
-------------------------------------------------------------------
-Julia DP5 versus Sundials.jl CVODE_Adams
+Julia native
+method/resolution               200          400          800          1600         3200
+jl-native-v1                    0.02 ± 0.00  0.06 ± 0.04  0.17 ± 0.01  0.54 ± 0.07  1.93 ± 0.04
+jl-native-v2                    0.00 ± 0.00  0.01 ± 0.00  0.02 ± 0.00  0.09 ± 0.00  0.36 ± 0.00
+jl-native-v3                    0.00 ± 0.00  0.01 ± 0.00  0.02 ± 0.00  0.09 ± 0.00  0.34 ± 0.01
+jl-native-v4                    0.00 ± 0.00  0.01 ± 0.00  0.02 ± 0.00  0.09 ± 0.00  0.34 ± 0.00
+jl-native-v5                    0.00 ± 0.00  0.01 ± 0.00  0.02 ± 0.00  0.09 ± 0.00  0.34 ± 0.00
 
-method/resolution           800          1600         3200
-julia-DP5                   0.15 ± 0.02  0.47 ± 0.00  1.80 ± 0.04
-julia-Sundials-CVODE_Adams  0.26 ± 0.00  0.89 ± 0.04  3.44 ± 0.07
+Python via OIF call to `jl_diffeq` (Julia OrdinaryDiffEq.jl)
+method/resolution               3200
+jl-openif-numba-v4              0.68 ± 0.00
 
-------------------------------------------------------------------
-Julia OIF from Python vs Native (inlining is with loop expansion)
-
-method/resolution           800          1600         3200
-@inline step!                0.07 ± 0.02  0.19 ± 0.00  0.74 ± 0.01
-@inline solve                0.05 ± 0.00  0.19 ± 0.00  0.83 ± 0.07
-@noinline step!              0.14 ± 0.00  0.48 ± 0.00  1.78 ± 0.04
-@noinline solve              0.14 ± 0.00  0.50 ± 0.04  1.83 ± 0.07
-numba-julia-oif-from-python  0.10 ± 0.00  0.24 ± 0.00  0.72 ± 0.01
+Python native to SciPy (sanity check)
+method/resolution               3200
+py-native-numba-v4              0.51 ± 0.04
 ```
 
 We can see that the results
