@@ -91,3 +91,17 @@ Julia, cwrapper-carray           0.372 ± 0.003
 ```
 which shows that with C wrapper it is a 10% penalty for OIF wrapper and
 8 percent penalty for C-arrays wrapper.
+
+
+### Comparison to Python and Julia directly
+
+I use package JuliaCall https://juliapy.github.io/PythonCall.jl/stable/juliacall/
+to call Julia from Python.
+I first used package `PyJulia` but it seems to be slow (solving ODE at N=3200
+takes about 1-1.5 seconds; probably arrays are copied).
+Also the package `JuliaCall` is recommended.
+
+This package has a peculiarity that it creates a new Julia environment.
+Therefore, one needs to install required packages into this environment.
+The thing that worked for me is to create `juliapkg.json` file and then
+during import it just add and precompiles the packages.
