@@ -130,13 +130,6 @@ def warmup():
 def main():
     print("Comparing performance of Open Interfaces for IVP interface from Python")
 
-    # numba_format_template = "py-pycall-cfunc-odejl"
-    # table = {}
-    # methods = {}
-
-    # Because Python does not allow using `!` in function name,s
-    # we need to introduce a function alias.
-
     warmup()
 
     for N in RESOLUTIONS_LIST:
