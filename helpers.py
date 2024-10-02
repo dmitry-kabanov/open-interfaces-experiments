@@ -51,6 +51,11 @@ def savefig(filename, dirname="", **kwargs):
 def compute_mean_and_ci(values: np.ndarray | list) -> tuple[float, float]:
     """Returns mean and err, so that mean ْ± err defines 95% confidence interval."""
     mean = np.mean(values)
-    err = 2 * np.std(values, ddof=1) / np.sqrt(len(values))
+    if len(values) > 1:
+        dev = np.std(values, ddof=1)
+    else:
+        print("WARNING: computing deviation without correction")
+        dev = np.std(values)
+    err = 2 * dev / np.sqrt(len(values))
 
     return mean, err
