@@ -1,12 +1,15 @@
 """We wrap a C version of Burgers' eqn with ctypes and invoke OrdinaryDiffEq.jl"""
 
 import ctypes
+import sys
 import time
 
 import numpy as np
 import numpy.testing as npt
 from juliacall import Main as jl
+from juliacall import VectorValue
 from juliacall import convert as jlconvert
+from line_profiler import profile
 
 from common import BurgersEquationProblem
 from helpers import compute_mean_and_ci, get_outdir
@@ -16,9 +19,13 @@ ATOL = 1e-12
 
 RESOLUTIONS_LIST = [200, 400, 800, 1600, 3200]
 N_RUNS = 30
+RESOLUTIONS_LIST = [3200]
+N_RUNS = 2
 
 OUTDIR = get_outdir()
 RESULT_PERF_FILENAME = OUTDIR / "runtime_vs_resolution_python.csv"
+
+ELAPSED_TIME = 0.0
 
 
 def get_wrapper_for_burgers_c_func():
@@ -33,13 +40,31 @@ def get_wrapper_for_burgers_c_func():
         ctypes.c_size_t,
     ]
 
+    @profile
     def compute_rhs_wrapper(udot, u, p, t):
         # Load C function
         # Call it with arguments (t, u, udot, p)
-        __import__("ipdb").set_trace()
-        c_u = u.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-        c_udot = udot.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+        global ELAPSED_TIME
+        tic = time.perf_counter()
+        if isinstance(u, VectorValue):
+            np_u = u.to_numpy(copy=False)
+            np_udot = np.asarray(udot)
+        else:
+            print("Numpy")
+            # sys.exit()
+            np_u = u
+            np_udot = udot
+        # c_u = np_u.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+        # c_udot = np_udot.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+        # c_u = np_u.__array_interface__["data"][0]
+        # c_udot = np_udot.__array_interface__["data"][0]
+        # c_u = np_u.ctypes.data_as(ctypes.c_void_p)
+        # c_udot = np_udot.ctypes.data_as(ctypes.c_void_p)
+        c_u = np_u.ctypes.data
+        c_udot = np_udot.ctypes.data
         x = ctypes.pointer(ctypes.c_double(p[0]))
+        toc = time.perf_counter()
+        ELAPSED_TIME += toc - tic
         compute_rhs(t, c_u, c_udot, x, len(u))
 
     return compute_rhs_wrapper
@@ -82,6 +107,7 @@ def measure_perf_once(N):
 
 
 def warmup():
+    print("BEGIN warmup")
     problem = BurgersEquationProblem(N=101)
     y0 = problem.u0
     p = (problem.dx,)
@@ -98,6 +124,7 @@ def warmup():
         save_everystep=False,
     )
     jl.step_b(solver, 0.01 - 0.0, True)
+    print("END warmup")
 
 
 def main():
@@ -123,6 +150,9 @@ def main():
 
         runtime_mean, ci = compute_mean_and_ci(elapsed_times)
         print(f"Runtime, sec: {runtime_mean:.3f} ± {ci:.3f}")
+
+    # print(f"ELAPSED_TIME: {ELAPSED_TIME:.3f}")
+    print(f"ELAPSED_TIME mean: {ELAPSED_TIME / N_RUNS:.3f}")
 
 
 if __name__ == "__main__":
