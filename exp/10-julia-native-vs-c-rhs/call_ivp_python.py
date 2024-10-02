@@ -20,7 +20,7 @@ ATOL = 1e-12
 RESOLUTIONS_LIST = [200, 400, 800, 1600, 3200]
 N_RUNS = 30
 RESOLUTIONS_LIST = [3200]
-N_RUNS = 2
+N_RUNS = 30
 
 OUTDIR = get_outdir()
 RESULT_PERF_FILENAME = OUTDIR / "runtime_vs_resolution_python.csv"
@@ -30,10 +30,13 @@ ELAPSED_TIME = 0.0
 
 def get_wrapper_for_burgers_c_func():
     lib = ctypes.CDLL("./burgers.so")
+    nd_pointer = np.ctypeslib.ndpointer(dtype=np.float64, ndim=1)
     compute_rhs = lib.rhs_carray
     compute_rhs.restype = None
     compute_rhs.argtypes = [
         ctypes.c_double,
+        # nd_pointer,
+        # nd_pointer,
         ctypes.c_void_p,
         ctypes.c_void_p,
         ctypes.c_void_p,
@@ -47,8 +50,9 @@ def get_wrapper_for_burgers_c_func():
         global ELAPSED_TIME
         tic = time.perf_counter()
         if isinstance(u, VectorValue):
-            np_u = u.to_numpy(copy=False)
-            np_udot = np.asarray(udot)
+            np_u = u.to_numpy(dtype=np.float64, copy=False)
+            np_udot = udot.to_numpy(dtype=np.float64, copy=False)
+            # np_udot = np.asarray(udot)
         else:
             print("Numpy")
             # sys.exit()
@@ -66,6 +70,7 @@ def get_wrapper_for_burgers_c_func():
         toc = time.perf_counter()
         ELAPSED_TIME += toc - tic
         compute_rhs(t, c_u, c_udot, x, len(u))
+        # compute_rhs(t, np_u, np_udot, x, len(u))
 
     return compute_rhs_wrapper
 
