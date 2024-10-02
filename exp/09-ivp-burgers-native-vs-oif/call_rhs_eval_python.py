@@ -13,7 +13,7 @@ from common import BurgersEquationProblem
 from helpers import compute_mean_and_ci
 
 N_TRIALS = 30
-N_RUNS = 100_000
+N_RUNS = 41_000
 N = 3200
 
 

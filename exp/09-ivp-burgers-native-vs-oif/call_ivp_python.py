@@ -25,9 +25,8 @@ from helpers import compute_mean_and_ci, get_outdir
 RTOL = 1e-6
 ATOL = 1e-12
 
-RESOLUTIONS_LIST = [800, 1600, 3200]
-RESOLUTIONS_LIST = [800, 1600]
-N_RUNS = 2
+RESOLUTIONS_LIST = [200, 400, 800, 1600, 3200]
+N_RUNS = 30
 VERSIONS = ["v1", "v2", "v3", "v4", "v4+wrapper"]
 
 OUTDIR = get_outdir()

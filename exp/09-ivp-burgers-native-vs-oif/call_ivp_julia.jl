@@ -11,9 +11,8 @@ include("rhsversions.jl")
 using .RHSVersions
 
 VERSIONS = ["v1", "v2", "v3", "v4", "v5"]
-RESOLUTIONS_LIST = [800, 1600, 3200]
-RESOLUTIONS_LIST = [800, 1600]
-N_RUNS = 2
+RESOLUTIONS_LIST = [200, 400, 800, 1600, 3200]
+N_RUNS = 30
 
 OUTDIR = Helpers.getOutdir(@__FILE__)
 RESULT_FILENAME_JULIA = OUTDIR * "/runtime_vs_resolution_julia.csv"

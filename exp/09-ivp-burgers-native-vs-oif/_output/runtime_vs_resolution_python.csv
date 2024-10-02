@@ -1,21 +1,7 @@
-# method, resolution, runtime0, runtime1
-py-openif-numba-v1, 200, 0.013617, 0.013479
-py-openif-numba-v1, 400, 0.025903, 0.025818
-py-openif-numba-v1, 800, 0.067150, 0.065717
-py-openif-numba-v1, 1600, 0.205782, 0.206213
-py-openif-numba-v1, 3200, 0.818657, 0.816054
-py-openif-numba-v2, 200, 0.013145, 0.011081
-py-openif-numba-v2, 400, 0.019652, 0.019572
-py-openif-numba-v2, 800, 0.046880, 0.045979
-py-openif-numba-v2, 1600, 0.146287, 0.145830
-py-openif-numba-v2, 3200, 0.580441, 0.579395
-py-openif-numba-v3, 200, 0.010298, 0.010353
-py-openif-numba-v3, 400, 0.017930, 0.018220
-py-openif-numba-v3, 800, 0.043018, 0.042300
-py-openif-numba-v3, 1600, 0.146935, 0.138793
-py-openif-numba-v3, 3200, 0.497236, 0.484801
-py-native-numba-v3, 200, 0.006556, 0.006700
-py-native-numba-v3, 400, 0.014441, 0.014386
-py-native-numba-v3, 800, 0.041151, 0.043764
-py-native-numba-v3, 1600, 0.134979, 0.141304
-py-native-numba-v3, 3200, 0.506076, 0.505482
+# method,200,400,800,1600,3200
+py-openif-numba-v1            ,0.01 ± 0.00,0.03 ± 0.00,0.06 ± 0.00,0.21 ± 0.00,0.82 ± 0.01
+py-openif-numba-v2            ,0.01 ± 0.00,0.02 ± 0.00,0.05 ± 0.00,0.15 ± 0.00,0.58 ± 0.00
+py-openif-numba-v3            ,0.01 ± 0.00,0.02 ± 0.00,0.05 ± 0.00,0.16 ± 0.00,0.59 ± 0.00
+py-openif-numba-v4            ,0.01 ± 0.00,0.02 ± 0.00,0.04 ± 0.00,0.13 ± 0.00,0.49 ± 0.00
+py-openif-numba-v4+wrapper    ,0.01 ± 0.00,0.02 ± 0.00,0.04 ± 0.00,0.14 ± 0.00,0.50 ± 0.00
+py-native-numba-v3            ,0.01 ± 0.00,0.01 ± 0.00,0.04 ± 0.00,0.13 ± 0.00,0.49 ± 0.01

@@ -3,7 +3,7 @@ using Statistics
 using Test
 
 N_TRIALS = 30
-N_RUNS = 100_000
+N_RUNS = 41_000
 N = 3200
 
 include("rhsversions.jl")
@@ -19,7 +19,7 @@ function benchmark_this_version(version_name, func, udot, u, p)
     for t = 1:N_TRIALS
         tic = time_ns()
         for j = 1:N_RUNS
-            func(udot, u[:, j], (dx,), 0.0)
+            func(udot, u[:, 1], (dx,), 0.0)
         end
         toc = time_ns()
         elapsed = (toc - tic) / 1e9

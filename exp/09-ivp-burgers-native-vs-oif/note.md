@@ -14,19 +14,6 @@ The comparison strategy is basically the same as in the previous experiment.
 
 ## Results
 
-So, the problem that I have with this experiment is that somehow Numba
-gives twice faster RHS evaluation than Julia: ~0.25 vs ~0.33 seconds
-for 41000 evaluations.
-
-However, when solving the real problem with time integration (which
-requires approximately 41000 RHS evals for the Dorman--Prince RK5(4) method),
-with Numba and Python it is about 0.5 seconds (which means that RHS evals
-take only 50% of the runtime), while Julia solves it in 0.35 seconds!
-
-So, what is the problem then? Does Python + Fortran dopri5 code together
-are so crazy inefficient?
-Does Julia somehow optimize the whole thing in a super-duper efficient way?
-
 ### Optimization of Python wrapper for callbacks
 
 I profile invokation of Julia sovlers from Python using IPython:
@@ -77,20 +64,20 @@ it became 0.690 which is super suspicious.
 cat _output/rhs_evals.txt
 Python, accumulated runtime of 41000 RHS evals, statistics from 30 trials
 Problem size is 3201
-Python + NumPy                   2.020 ± 0.021
-Python + Numba v1                0.542 ± 0.005
-Python + Numba v2                0.320 ± 0.005
-Python + Numba v3                0.332 ± 0.003
-Python + Numba v4                0.229 ± 0.001
+Python + NumPy              2.020 ± 0.021
+Python + Numba v1           0.542 ± 0.005
+Python + Numba v2           0.320 ± 0.005
+Python + Numba v3           0.332 ± 0.003
+Python + Numba v4           0.229 ± 0.001
 Leftmost udot value: -0.0982710900737871
 
 Julia, accumulated runtime of 41000 RHS evals, statistics from 30 trials
 Problem size is 3201
-Julia, v1                        1.578 ± 0.033
-Julia, v2                        0.332 ± 0.002
-Julia, v3                        0.300 ± 0.002
-Julia, v4                        0.302 ± 0.002
-Julia, v5                        0.301 ± 0.002
+Julia, v1                   1.578 ± 0.033
+Julia, v2                   0.332 ± 0.002
+Julia, v3                   0.300 ± 0.002
+Julia, v4                   0.302 ± 0.002
+Julia, v5                   0.301 ± 0.002
 Leftmost udot value: -0.0982710900737871
 
 ---
@@ -98,30 +85,47 @@ python run.py
 
 Python native and via OIF: Scipy.integrate.ode.dopri5
 # method                        200          400          800          1600         3200
-py-openif-numba-v1              0.01 ± 0.00  0.03 ± 0.00  0.06 ± 0.00  0.21 ± 0.00  0.82 ± 0.01
-py-openif-numba-v2              0.01 ± 0.00  0.02 ± 0.00  0.05 ± 0.00  0.15 ± 0.00  0.58 ± 0.00
-py-openif-numba-v3              0.01 ± 0.00  0.02 ± 0.00  0.05 ± 0.00  0.16 ± 0.00  0.59 ± 0.00
-py-openif-numba-v4              0.01 ± 0.00  0.02 ± 0.00  0.04 ± 0.00  0.13 ± 0.00  0.49 ± 0.00
-py-openif-numba-v4+wrapper      0.01 ± 0.00  0.02 ± 0.00  0.04 ± 0.00  0.14 ± 0.00  0.50 ± 0.00
-py-native-numba-v3              0.01 ± 0.00  0.01 ± 0.00  0.04 ± 0.00  0.13 ± 0.00  0.49 ± 0.01
+py-openif-numba-v1          0.01 ± 0.00  0.03 ± 0.00  0.06 ± 0.00  0.21 ± 0.00  0.82 ± 0.01
+py-openif-numba-v2          0.01 ± 0.00  0.02 ± 0.00  0.05 ± 0.00  0.15 ± 0.00  0.58 ± 0.00
+py-openif-numba-v3          0.01 ± 0.00  0.02 ± 0.00  0.05 ± 0.00  0.16 ± 0.00  0.59 ± 0.00
+py-openif-numba-v4          0.01 ± 0.00  0.02 ± 0.00  0.04 ± 0.00  0.13 ± 0.00  0.49 ± 0.00
+py-openif-numba-v4+wrapper  0.01 ± 0.00  0.02 ± 0.00  0.04 ± 0.00  0.14 ± 0.00  0.50 ± 0.00
+py-native-numba-v3          0.01 ± 0.00  0.01 ± 0.00  0.04 ± 0.00  0.13 ± 0.00  0.49 ± 0.01
 
 Julia native
 method/resolution               200          400          800          1600         3200
-jl-native-v1                    0.02 ± 0.00  0.06 ± 0.04  0.17 ± 0.01  0.54 ± 0.07  1.93 ± 0.04
-jl-native-v2                    0.00 ± 0.00  0.01 ± 0.00  0.02 ± 0.00  0.09 ± 0.00  0.36 ± 0.00
-jl-native-v3                    0.00 ± 0.00  0.01 ± 0.00  0.02 ± 0.00  0.09 ± 0.00  0.34 ± 0.01
-jl-native-v4                    0.00 ± 0.00  0.01 ± 0.00  0.02 ± 0.00  0.09 ± 0.00  0.34 ± 0.00
-jl-native-v5                    0.00 ± 0.00  0.01 ± 0.00  0.02 ± 0.00  0.09 ± 0.00  0.34 ± 0.00
+jl-native-v1                0.02 ± 0.00  0.06 ± 0.04  0.17 ± 0.01  0.54 ± 0.07  1.93 ± 0.04
+jl-native-v2                0.00 ± 0.00  0.01 ± 0.00  0.02 ± 0.00  0.09 ± 0.00  0.36 ± 0.00
+jl-native-v3                0.00 ± 0.00  0.01 ± 0.00  0.02 ± 0.00  0.09 ± 0.00  0.34 ± 0.01
+jl-native-v4                0.00 ± 0.00  0.01 ± 0.00  0.02 ± 0.00  0.09 ± 0.00  0.34 ± 0.00
+jl-native-v5                0.00 ± 0.00  0.01 ± 0.00  0.02 ± 0.00  0.09 ± 0.00  0.34 ± 0.00
 
 Python via OIF call to `jl_diffeq` (Julia OrdinaryDiffEq.jl)
-method/resolution               3200
-jl-openif-numba-v4              0.68 ± 0.00
+method/resolution               200          400          800          1600         3200
+jl-openif-numba-v4          0.05 ± 0.00  0.06 ± 0.00  0.11 ± 0.00  0.24 ± 0.00  0.69 ± 0.02
 
 Python native to SciPy (sanity check)
-method/resolution               3200
-py-native-numba-v4              0.51 ± 0.04
+method/resolution               200          400          800          1600         3200
+py-native-numba-v4          0.01 ± 0.00  0.01 ± 0.00  0.04 ± 0.00  0.14 ± 0.00  0.53 ± 0.01
 ```
 
-We can see that the results
+We can see that going from Python to Julia via Open Interfaces is quite slow:
+solving the whole thing in Julia takes 0.34 seconds while Python->OIF->Julia
+takes 0.68 seconds (2x slower).
+And this is in spite of the fact that Numba-optimized RHS is faster than
+the Julia's one.
 
 ## Conclusion
+
+So, the problem that I have with this experiment is that somehow Numba
+gives twice faster RHS evaluation than Julia: ~0.25 vs ~0.33 seconds
+for 41000 evaluations.
+
+However, when solving the real problem with time integration (which
+requires approximately 41000 RHS evals for the Dormand--Prince RK5(4) method),
+with Numba and Python it is about 0.5 seconds (which means that RHS evals
+take only 50% of the runtime), while Julia solves it in 0.35 seconds.
+
+So, what is the problem then? Does Python + Fortran dopri5 code together
+are so crazy inefficient?
+Does Julia somehow optimize the whole thing in a super-duper efficient way?

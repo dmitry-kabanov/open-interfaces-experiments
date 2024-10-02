@@ -1,0 +1,17 @@
+Python, accumulated runtime of 41000 RHS evals, statistics from 30 trials
+Problem size is 3201
+Python + NumPy                   2.020 ± 0.021
+Python + Numba v1                0.542 ± 0.005
+Python + Numba v2                0.320 ± 0.005
+Python + Numba v3                0.332 ± 0.003
+Python + Numba v4                0.229 ± 0.001
+Leftmost udot value: -0.0982710900737871
+
+Julia, accumulated runtime of 41000 RHS evals, statistics from 30 trials
+Problem size is 3201
+Julia, v1                        1.578 ± 0.033
+Julia, v2                        0.332 ± 0.002
+Julia, v3                        0.300 ± 0.002
+Julia, v4                        0.302 ± 0.002
+Julia, v5                        0.301 ± 0.002
+Leftmost udot value: -0.0982710900737871
