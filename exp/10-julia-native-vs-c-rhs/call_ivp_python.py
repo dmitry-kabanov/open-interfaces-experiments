@@ -1,14 +1,12 @@
 """We wrap a C version of Burgers' eqn with ctypes and invoke OrdinaryDiffEq.jl"""
 
 import ctypes
-import sys
 import time
 
 import numpy as np
 import numpy.testing as npt
 from juliacall import Main as jl
 from juliacall import VectorValue
-from juliacall import convert as jlconvert
 from line_profiler import profile
 
 from common import BurgersEquationProblem
@@ -20,7 +18,7 @@ ATOL = 1e-12
 RESOLUTIONS_LIST = [200, 400, 800, 1600, 3200]
 N_RUNS = 30
 RESOLUTIONS_LIST = [3200]
-N_RUNS = 30
+N_RUNS = 2
 
 OUTDIR = get_outdir()
 RESULT_PERF_FILENAME = OUTDIR / "runtime_vs_resolution_python.csv"
@@ -30,15 +28,18 @@ ELAPSED_TIME = 0.0
 
 def get_wrapper_for_burgers_c_func():
     lib = ctypes.CDLL("./burgers.so")
-    nd_pointer = np.ctypeslib.ndpointer(dtype=np.float64, ndim=1)
+    # nd_pointer = np.ctypeslib.ndpointer(dtype=np.float64, ndim=1)
+    double_p_t = ctypes.POINTER(ctypes.c_double)
+
     compute_rhs = lib.rhs_carray
     compute_rhs.restype = None
     compute_rhs.argtypes = [
         ctypes.c_double,
         # nd_pointer,
         # nd_pointer,
+        # double_p_t,
         ctypes.c_void_p,
-        ctypes.c_void_p,
+        double_p_t,
         ctypes.c_void_p,
         ctypes.c_size_t,
     ]
@@ -58,14 +59,20 @@ def get_wrapper_for_burgers_c_func():
             # sys.exit()
             np_u = u
             np_udot = udot
-        # c_u = np_u.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-        # c_udot = np_udot.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-        # c_u = np_u.__array_interface__["data"][0]
-        # c_udot = np_udot.__array_interface__["data"][0]
+        # c_u = np_u.ctypes.data_as(double_p_t)
+        # c_udot = np_udot.ctypes.data_as(double_p_t)
+        # c_u = np_u.ctypes._as_parameter_
+        # c_udot = np_udot.ctypes.data_as(double_p_t)
+        c_u = ctypes.cast(np.ctypeslib.as_ctypes(np_u), double_p_t)
+        c_udot = ctypes.cast(np.ctypeslib.as_ctypes(np_udot), double_p_t)
+        # c_u = ctypes.cast(np_u.__array_interface__["data"][0], double_p_t)
+        # c_udot = np_udot.__array_interface__["data"][0], double_p_t)
         # c_u = np_u.ctypes.data_as(ctypes.c_void_p)
         # c_udot = np_udot.ctypes.data_as(ctypes.c_void_p)
-        c_u = np_u.ctypes.data
-        c_udot = np_udot.ctypes.data
+        # c_u = np_u.ctypes.data
+        # c_udot = np_udot.ctypes.data
+        # c_u = ctypes.cast(memoryview(np_u)[:], double_p_t)
+        # c_udot = ctypes.cast(memoryview(np_udot)[:], double_p_t)
         x = ctypes.pointer(ctypes.c_double(p[0]))
         toc = time.perf_counter()
         ELAPSED_TIME += toc - tic
