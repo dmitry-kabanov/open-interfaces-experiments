@@ -21,18 +21,33 @@ His idea is that maybe the wrapped `$ccall` in Julia is not that cheap.
 
 ## Results
 
-I wrote two versions of the function: the one that works with OIFArrayF64
-and another that works directly with C arrays.
+### Writing C wrapper and making sure it is fast
+
+I wrote two versions of the function: the one that works with `OIFArrayF64`
+and another that works directly with C arrays:
+they are denoted as `cwrapper-oif-array` and `cwrapper-c-array`, respectively.
+
+Note the base performance and optimization are not strictly reproducible
+as I have modified the code in-place (as well as the change of the compiler).
+
+To run the RHS runtime comparison:
+```
+julia call_rhs_eval_julia.jl
+```
+
+#### Base performance
+
+I have a version in C quite similar to the Julia version:
+manually optimized dense code that passes through the grid only two times
+(once to find the sound speed and the second to update fluxes).
 
 I compiled the C library with `-march=native -O3`.
-
-Base performance:
 ```
 Julia, accumulated runtime of 41000 RHS evals, statistics from 30 trials
 Problem size is 3201
 Julia, v5                        0.318 ± 0.031
-Julia, cwrapper-oif              0.442 ± 0.002
-Julia, cwrapper-carray           0.439 ± 0.003
+Julia, cwrapper-oif-array        0.442 ± 0.002
+Julia, cwrapper-c-array          0.439 ± 0.003
 Leftmost udot_1 value: -0.0982710900737871
 Leftmost udot_2 value: -0.0982710900737871
 Leftmost udot_3 value: -0.0982710900737871
@@ -40,18 +55,22 @@ Leftmost udot_3 value: -0.0982710900737871
 We can see that the difference between `cwrapper-oif` and `cwrapper-carray` is
 negligible.
 
+#### Optimization 1
+
 Then for the version that works with C arrays, I have added `restrict`
 and `const` to signature, it helps a bit:
 ```
 Julia, accumulated runtime of 41000 RHS evals, statistics from 30 trials
 Problem size is 3201
 Julia, v5                        0.314 ± 0.036
-Julia, cwrapper-oif              0.441 ± 0.001
-Julia, cwrapper-carray           0.394 ± 0.002
+Julia, cwrapper-oif-array        0.441 ± 0.001
+Julia, cwrapper-c-array          0.394 ± 0.002
 Leftmost udot_1 value: -0.0982710900737871
 Leftmost udot_2 value: -0.0982710900737871
 Leftmost udot_3 value: -0.0982710900737871
 ```
+
+#### Optimization 2
 
 I have switched to Clang 14 and magically, the performance in C became
 almost as good as in Julia:
@@ -59,8 +78,8 @@ almost as good as in Julia:
 Julia, accumulated runtime of 41000 RHS evals, statistics from 30 trials
 Problem size is 3201
 Julia, v5                        0.310 ± 0.029
-Julia, cwrapper-oif              0.330 ± 0.001
-Julia, cwrapper-carray           0.328 ± 0.001
+Julia, cwrapper-oif-array        0.330 ± 0.001
+Julia, cwrapper-c-array          0.328 ± 0.001
 Leftmost udot_1 value: -0.0982710900737871
 Leftmost udot_2 value: -0.0982710900737871
 ```
@@ -68,9 +87,12 @@ Leftmost udot_2 value: -0.0982710900737871
 C wrappers are six percent slower than the Julia's magic.
 This was the moment where I have stopped optimizing this as it is good enough.
 
-### Solving ODEs
+### OrdinaryDiffEq.jl: comparison of native RHS and C versions
 
-Using the above right-hand sides, I solve the initial-value problem.
+Using the above right-hand sides, I solve the initial-value problem:
+```
+julia call_ivp_julia.jl
+```
 
 I wrap C-wrappers one more time to match the signature expected by the
 `OrdinaryDiffEq.jl`.
@@ -89,8 +111,9 @@ Julia, v5                        0.346 ± 0.003
 Julia, cwrapper-oif              0.380 ± 0.003
 Julia, cwrapper-carray           0.372 ± 0.003
 ```
-which shows that with C wrapper it is a 10% penalty for OIF wrapper and
-8 percent penalty for C-arrays wrapper.
+which shows that with C wrapper it is a 10% penalty for the version
+with `OIFArrayF64` data types and eight percent penalty for the version
+with C arrays.
 
 
 ### Comparison to Python and Julia directly
@@ -104,7 +127,7 @@ Also the package `JuliaCall` is recommended.
 This package has a peculiarity that it creates a new Julia environment.
 Therefore, one needs to install required packages into this environment.
 The thing that worked for me is to create `juliapkg.json` file and then
-during import it just add and precompiles the packages.
+during the import it just adds and precompiles the packages.
 
 
 ### Line profiling Python wrapper for C function

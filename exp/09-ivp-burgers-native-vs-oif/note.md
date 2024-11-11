@@ -112,13 +112,13 @@ py-native-numba-v4          0.01 ± 0.00  0.01 ± 0.00  0.04 ± 0.00  0.14 ± 0.
 We can see that going from Python to Julia via Open Interfaces is quite slow:
 solving the whole thing in Julia takes 0.34 seconds while Python->OIF->Julia
 takes 0.68 seconds (2x slower).
-And this is in spite of the fact that Numba-optimized RHS is faster than
+And this is although the Numba-optimized RHS is faster than
 the Julia's one.
 
 ## Conclusion
 
-So, the problem that I have with this experiment is that somehow Numba
-gives twice faster RHS evaluation than Julia: ~0.25 vs ~0.33 seconds
+So, the problem that I have with this experiment is that somehow Numba has
+significantly faster RHS evaluation than Julia: ~0.25 vs ~0.33 seconds
 for 41000 evaluations.
 
 However, when solving the real problem with time integration (which
