@@ -18,7 +18,7 @@ ATOL = 1e-12
 RESOLUTIONS_LIST = [200, 400, 800, 1600, 3200]
 N_RUNS = 30
 RESOLUTIONS_LIST = [3200]
-N_RUNS = 2
+N_RUNS = 1
 
 OUTDIR = get_outdir()
 RESULT_PERF_FILENAME = OUTDIR / "runtime_vs_resolution_python.csv"
@@ -118,31 +118,14 @@ def measure_perf_once(N):
     return runtime
 
 
-def warmup():
-    print("BEGIN warmup")
-    problem = BurgersEquationProblem(N=101)
-    y0 = problem.u0
-    p = (problem.dx,)
-    tspan = (problem.t0, problem.tfinal)
-    compute_rhs = get_wrapper_for_burgers_c_func()
-
-    jl.seval("using OrdinaryDiffEq")
-    ode_problem = jl.ODEProblem(compute_rhs, y0, tspan, p)
-    solver = jl.init(
-        ode_problem,
-        jl.DP5(),
-        reltol=RTOL,
-        abstol=ATOL,
-        save_everystep=False,
-    )
-    jl.step_b(solver, 0.01 - 0.0, True)
-    print("END warmup")
-
-
 def main():
-    print("Comparing performance of Open Interfaces for IVP interface from Python")
+    print("Calling OrdinaryDiffEq.jl from Python with RHS written in C")
+    print(f"N_RUNS = {N_RUNS}")
 
-    warmup()
+    print("BEGIN warmup")
+    jl.seval("using OrdinaryDiffEq")
+    measure_perf_once(N=101)
+    print("END warmup")
 
     for N in RESOLUTIONS_LIST:
         print()
@@ -157,7 +140,7 @@ def main():
         print(f"Runtime, sec: {runtime_mean:.3f} ± {ci:.3f}")
 
     # print(f"ELAPSED_TIME: {ELAPSED_TIME:.3f}")
-    print(f"ELAPSED_TIME mean: {ELAPSED_TIME / N_RUNS:.3f}")
+    print(f"ELAPSED_TIME / N_RUNS, sec: {ELAPSED_TIME / N_RUNS:.3f}")
 
 
 if __name__ == "__main__":
