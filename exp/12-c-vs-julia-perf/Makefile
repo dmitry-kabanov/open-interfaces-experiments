@@ -1,6 +1,6 @@
 OIF_DIR := ./code
 
-# CC := /usr/bin/clang
+CC := /usr/bin/clang
 CFLAGS := -march=nocona -mtune=native -O3 -g -fPIC
 CFLAGS += -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt
 CFLAGS += -ffunction-sections -pipe
