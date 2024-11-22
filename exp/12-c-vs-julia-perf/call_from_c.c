@@ -232,7 +232,7 @@ main(int argc, char *argv[])
     }
 
     char runtimes_filename[512];
-    sprintf(runtimes_filename, "_output/N=%04d/runtimes_c_%s.txt", N, impl);
+    sprintf(runtimes_filename, "_output/N=%04d/runtimes-c.txt", N);
     FILE *fh = fopen(runtimes_filename, "w");
     if (fh == NULL) {
         fprintf(stderr,
