@@ -36,7 +36,7 @@ parse_impl(int argc, char *argv[])
 char *
 parse_output_filename(int argc, char *argv[])
 {
-    if (argc == 1 || argc == 2) {
+    if (argc < 3) {
         return "_output/solution.txt";
     }
     else {
@@ -47,7 +47,7 @@ parse_output_filename(int argc, char *argv[])
 int
 parse_resolution(int argc, char *argv[])
 {
-    if (argc < 3) {
+    if (argc < 4) {
         return 3200;
     }
     else {
