@@ -13,10 +13,7 @@ LDFLAGS := -L$(OIF_DIR)/build
 LDLIBS := -loif_c_data_structures -loif_c -loif_c_util -ldl -lm
 
 .PHONY : all
-all : run_from_c
-
-run_from_c : call_from_c
-	./call_from_c
+all : call_from_c
 
 call_from_c : burgers.so
 
