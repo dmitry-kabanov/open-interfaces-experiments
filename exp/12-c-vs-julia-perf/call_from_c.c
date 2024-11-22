@@ -248,6 +248,10 @@ main(int argc, char *argv[])
     printf("Output filename: %s\n", output_filename);
     printf("Resolution: %d\n", N);
 
+    printf("=== BEGIN warmup\n");
+    benchmark_one_run(impl, output_filename, N, save_solution, &runtimes[0]);
+    printf("=== END warmup\n");
+
     for (int i = 0; i < N_TRIALS; ++i) {
         if (i == N_TRIALS - 1) {
             save_solution = true;
