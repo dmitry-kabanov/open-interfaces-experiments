@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+for t in exp/*; do
+    if [ -d "$t" ]; then
+        if [ -d "$t/code" ]; then
+            pushd "$t/code" > /dev/null || return 1
+                if [ -n "$(git status --porcelain)" ]; then
+                    echo worktree "${t}" is dirty
+                fi
+            popd > /dev/null || return 1
+        fi
+
+    fi
+done
