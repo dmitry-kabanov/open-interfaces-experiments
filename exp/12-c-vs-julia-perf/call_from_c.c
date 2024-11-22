@@ -134,7 +134,7 @@ main(int argc, char *argv[])
         goto cleanup;
     }
 
-    status = oif_ivp_set_tolerances(implh, 1e-8, 1e-12);
+    status = oif_ivp_set_tolerances(implh, 1e-6, 1e-12);
     assert(status == 0);
 
     OIFConfigDict *dict = oif_config_dict_init();
