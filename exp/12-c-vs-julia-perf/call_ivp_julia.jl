@@ -21,27 +21,27 @@ function wrap_for_odejl(func)
     return wrapper
 end
 
-function benchmark_this_version(version_name, func, u0, tspan, p)
-    runtimes = []
+function benchmark_this_version(func, u0, tspan, p, save_solution)
+    runtimes::Vector{Float64} = []
     times = collect(range(tspan[1], tspan[2], 101))
 
-    for t = 1:N_TRIALS
-        odeProblem = ODEProblem(func, u0, tspan, p)
-        solver = init(odeProblem, DP5(); reltol=1e-6, abstol=1e-12, save_everystep = false)
-        # Warm up the function under benchmark.
-        # func(udot, u0, p, 0.0)
-        tic = time_ns()
-        for t in times[2:end]
-            step!(solver, t - solver.t, true)
-        end
-        toc = time_ns()
-        elapsed = (toc - tic) / 1e9
-        push!(runtimes, elapsed)
+    odeProblem = ODEProblem(func, u0, tspan, p)
+    solver = init(odeProblem, DP5(); reltol=1e-6, abstol=1e-12, save_everystep = false)
+    # Warm up the function under benchmark.
+    # func(udot, u0, p, 0.0)
+    tic = time_ns()
+    for t in times[2:end]
+        step!(solver, t - solver.t, true)
+    end
+    toc = time_ns()
+    elapsed = (toc - tic) / 1.0e9
+
+    if save_solution
+        solution_filename = @sprintf("_output/N=%04d/solution-julia.txt", N)
+        save_vector_to_file(solver.u, solution_filename)
     end
 
-    mean, ci = runtime_stats(runtimes)
-    label = @sprintf "Julia, %s" version_name
-    print_runtime(label, mean, ci)
+    return elapsed
 end
 
 function runtime_stats(elapsed_times)
@@ -55,6 +55,14 @@ end
 
 function print_runtime(prefix, mean, ci)
     @printf "%-32s %.3f ± %.3f\n" prefix mean ci
+end
+
+function save_vector_to_file(vec::Vector{Float64}, filename::String)
+    open(filename, "w") do file
+        for value in vec
+            write(file, "$(value)\n")
+        end
+    end
 end
 
 function measure()
@@ -72,43 +80,29 @@ function measure()
 
     libhandle = Libdl.dlopen("burgers.so")
     compute_rhs_oif_fn = Libdl.dlsym(libhandle, "rhs_oif")
-    compute_rhs_carray_fn = Libdl.dlsym(libhandle, "rhs_carray")
     compute_rhs_oif_wrapper = CallbackWrapper.make_wrapper_over_oif_c_callback(compute_rhs_oif_fn)
-    compute_rhs_carray_wrapper = CallbackWrapper.make_wrapper_over_carray_c_callback(compute_rhs_carray_fn)
-
-    udot = similar(u0)
-    udot_v1 = similar(u0)
-    udot_v2 = similar(u0)
-    udot_v3 = similar(u0)
-    udot_v4 = similar(u0)
-    udot_v5 = similar(u0)
-    udot_oif_cwrapper = similar(u0)
-    udot_carray_cwrapper = similar(u0)
-    u = rand(N + 1, N_RUNS)
-    # We use deterministic input because in the end we print the leftmost
-    # value to compare with results from Python.
-    for j = 1:N_RUNS
-        u[:, j] = u0
-    end
 
     @printf "Solving ODEs, statistics from %d trials\n" N_TRIALS
-    @printf "Problem size is %d\n" length(udot)
 
     w1 = wrap_for_odejl(compute_rhs_oif_wrapper)
-    w2 = wrap_for_odejl(compute_rhs_carray_wrapper)
-    RHSVersions.compute_rhs_v5(udot, u0, p, 0.0)
-    w1(udot, u0, p, 0.0)
-    w2(udot, u0, p, 0.0)
 
-    benchmark_this_version("v5", RHSVersions.compute_rhs_v5, u0, tspan, p)
-    benchmark_this_version("cwrapper-oif", w1, u0, tspan, p)
-    benchmark_this_version("cwrapper-carray", w2, u0, tspan, p)
+    save_solution = false
+    runtime = benchmark_this_version(w1, u0, tspan, p, save_solution)
+    runtimes::Vector{Float64} = []
+    for k = 1:N_TRIALS
+        if k == N_TRIALS
+            save_solution = true
+        end
+        runtime = benchmark_this_version(w1, u0, tspan, p, save_solution)
+        push!(runtimes, runtime)
+    end
 
-    # @test udot_v5 ≈ udot_oif_cwrapper rtol=1e-14 atol=1e-14
-    # @test udot_v5 ≈ udot_carray_cwrapper rtol=1e-14 atol=1e-14
-    # @printf "Leftmost udot_1 value: %.16f\n" udot_v5[1]
-    # @printf "Leftmost udot_2 value: %.16f\n" udot_oif_cwrapper[1]
-    # @printf "Leftmost udot_3 value: %.16f\n" udot_carray_cwrapper[1]
+    mean, ci = runtime_stats(runtimes)
+    label = @sprintf "Runtime, sec: "
+    print_runtime(label, mean, ci)
+
+    runtime_filename = @sprintf("_output/N=%04d/runtimes-julia.txt", N)
+    save_vector_to_file(runtimes, runtime_filename)
 end
 
 measure()
