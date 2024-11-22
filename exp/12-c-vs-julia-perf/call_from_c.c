@@ -102,6 +102,7 @@ compute_initial_condition_(size_t N, OIFArrayF64 *u0, OIFArrayF64 *grid, double 
 
     return 0;
 }
+
 int
 benchmark_one_run(
     const char *impl, const char *output_filename, int N, bool save_solution, double *p_runtime)
@@ -229,6 +230,16 @@ main(int argc, char *argv[])
         fprintf(stderr, "[main] Could not allocate memory for the runtimes array\n");
         goto finally;
     }
+
+    char runtimes_filename[512];
+    sprintf(runtimes_filename, "_output/N=%04d/runtimes_c_%s.txt", N, impl);
+    FILE *fh = fopen(runtimes_filename, "w");
+    if (fh == NULL) {
+        fprintf(stderr,
+            "[main] Could not open file to write runtimes '%s'\n",
+            runtimes_filename);
+        goto clean;
+    }
     // ========================================================================
 
     printf("Calling from C an open interface for solving y'(t) = f(t, y)\n");
@@ -251,7 +262,14 @@ main(int argc, char *argv[])
     printf("Runtime, sec: %.3f ± %.12f\n", mean_runtime, ci);
     retval = 0;
 
+    for (int i = 0; i < N_TRIALS; ++i) {
+        fprintf(fh, "%.16f\n", runtimes[i]);
+    }
+
 clean:
+    if (fh != NULL) {
+        fclose(fh);
+    }
     if (runtimes != NULL) {
         free(runtimes);
     }
