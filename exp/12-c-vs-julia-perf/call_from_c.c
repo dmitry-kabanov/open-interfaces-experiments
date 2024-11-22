@@ -55,6 +55,31 @@ parse_resolution(int argc, char *argv[])
     }
 }
 
+static double
+compute_mean(double *values, int n) {
+    double mean = 0.0;
+    for (int i = 0; i < n; ++i) {
+        mean += values[i];
+    }
+    mean /= n;
+
+    return mean;
+}
+
+static double
+compute_ci(double *values, int n, double mean) {
+    double var = 0.0;
+
+    for (int i = 0; i < n; ++i) {
+        var = (values[i] - mean) * (values[i] - mean);
+    }
+    var /= (n - 1);
+
+    double sem = sqrt(var / n);
+    double ci = 2 * sem;
+    return ci;
+}
+
 static int
 compute_initial_condition_(size_t N, OIFArrayF64 *u0, OIFArrayF64 *grid, double *dx,
                            double *dt_max)
@@ -78,29 +103,18 @@ compute_initial_condition_(size_t N, OIFArrayF64 *u0, OIFArrayF64 *grid, double 
     return 0;
 }
 int
-main(int argc, char *argv[])
+benchmark_one_run(
+    const char *impl, const char *output_filename, int N, bool save_solution, double *p_runtime)
 {
-    int retval = 0;
-    char *impl = parse_impl(argc, argv);
-    const char *output_filename = parse_output_filename(argc, argv);
-    const int N = parse_resolution(argc, argv);
-    const int T = 101;
-    printf("Calling from C an open interface for solving y'(t) = f(t, y)\n");
-    printf("where the system comes from inviscid 1D Burgers' equation\n");
-    printf("Implementation: %s\n", impl);
-    printf("Resolution: %d\n", N);
-    printf("Number of time steps: %d\n", T);
-
+    int retval = -1;
     double t0 = 0.0;
     double t_final = 10.0;
-    OIFArrayF64 *y0 = oif_create_array_f64(1, (intptr_t[1]){N});
+    const int T = 101;  // Number of time steps.
     OIFArrayF64 *y0 = oif_create_array_f64(1, (intptr_t[1]){N + 1});
     // Solution vector.
     OIFArrayF64 *y = oif_create_array_f64(1, (intptr_t[1]){N + 1});
-    OIFArrayF64 *y = oif_create_array_f64(1, (intptr_t[1]){N});
     // Grid
     OIFArrayF64 *grid = oif_create_array_f64(1, (intptr_t[1]){N + 1});
-    OIFArrayF64 *grid = oif_create_array_f64(1, (intptr_t[1]){N});
     double dx;
     double dt_max;
     int status = 1;  // Aux variable to check for errors.
@@ -169,25 +183,79 @@ main(int argc, char *argv[])
         }
     }
     clock_t toc = clock();
-    printf("Elapsed time = %.6f seconds\n", (double)(toc - tic) / CLOCKS_PER_SEC);
+    *p_runtime = (double)(toc - tic) / CLOCKS_PER_SEC;
+    printf("Elapsed time = %.3f seconds\n", *p_runtime);
     /* printf("Number of right-hand side evaluations = %d\n", N_RHS_EVALS); */
 
-    FILE *fp = fopen(output_filename, "w+e");
-    if (fp == NULL) {
-        fprintf(stderr, "Could not open file '%s' for writing\n", output_filename);
-        retval = EXIT_FAILURE;
-        goto cleanup;
+    if (save_solution) {
+        FILE *fp = fopen(output_filename, "w+e");
+        if (fp == NULL) {
+            fprintf(stderr, "Could not open file '%s' for writing\n", output_filename);
+            retval = EXIT_FAILURE;
+            goto cleanup;
+        }
+        for (int i = 0; i < N; ++i) {
+            fprintf(fp, "%.8f %.8f\n", grid->data[i], y->data[i]);
+        }
+        fclose(fp);
+        printf("Solution was written to file `%s`\n", output_filename);
     }
-    for (int i = 0; i < N; ++i) {
-        fprintf(fp, "%.8f %.8f\n", grid->data[i], y->data[i]);
-    }
-    fclose(fp);
-    printf("Solution was written to file `%s`\n", output_filename);
+
+    retval = 0;
 
 cleanup:
     oif_free_array_f64(y0);
     oif_free_array_f64(y);
     oif_free_array_f64(grid);
 
+    return retval;
+
+}
+
+int
+main(int argc, char *argv[])
+{
+    int retval = -1;
+    char *impl = parse_impl(argc, argv);
+    const char *output_filename = parse_output_filename(argc, argv);
+    const int N = parse_resolution(argc, argv);
+    bool save_solution = false;
+    int N_TRIALS = 30;
+
+    // ========================================================================
+    // Allocate resources.
+    double *runtimes = malloc(sizeof(*runtimes) * N_TRIALS);
+    if (runtimes == NULL) {
+        fprintf(stderr, "[main] Could not allocate memory for the runtimes array\n");
+        goto finally;
+    }
+    // ========================================================================
+
+    printf("Calling from C an open interface for solving y'(t) = f(t, y)\n");
+    printf("where the system comes from inviscid 1D Burgers' equation\n");
+    printf("Implementation: %s\n", impl);
+    printf("Output filename: %s\n", output_filename);
+    printf("Resolution: %d\n", N);
+
+    for (int i = 0; i < N_TRIALS; ++i) {
+        if (i == N_TRIALS - 1) {
+            save_solution = true;
+        }
+        int status = benchmark_one_run(impl, output_filename, N, save_solution, &runtimes[i]);
+        assert(status == 0);
+    }
+
+    double mean_runtime = compute_mean(runtimes, N_TRIALS);
+    double ci = compute_ci(runtimes, N_TRIALS, mean_runtime);
+
+    printf("Runtime, sec: %.3f ± %.12f\n", mean_runtime, ci);
+    retval = 0;
+
+clean:
+    if (runtimes != NULL) {
+        free(runtimes);
+    }
+
+finally:
     return retval;
 }
