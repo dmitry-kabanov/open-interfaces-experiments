@@ -48,7 +48,7 @@ int
 parse_resolution(int argc, char *argv[])
 {
     if (argc < 3) {
-        return 3201;
+        return 3200;
     }
     else {
         return atoi(argv[3]);
@@ -64,11 +64,11 @@ compute_initial_condition_(size_t N, OIFArrayF64 *u0, OIFArrayF64 *grid, double 
     double *x = grid->data;
     *dx = (b - a) / N;
 
-    for (int i = 0; i < N; ++i) {
+    for (int i = 0; i <= N; ++i) {
         x[i] = a + i * (*dx);
     }
 
-    for (int i = 0; i < N; ++i) {
+    for (int i = 0; i <= N; ++i) {
         u0->data[i] = 0.5 - 0.25 * sin(M_PI * x[i]);
     }
 
@@ -94,9 +94,12 @@ main(int argc, char *argv[])
     double t0 = 0.0;
     double t_final = 10.0;
     OIFArrayF64 *y0 = oif_create_array_f64(1, (intptr_t[1]){N});
+    OIFArrayF64 *y0 = oif_create_array_f64(1, (intptr_t[1]){N + 1});
     // Solution vector.
+    OIFArrayF64 *y = oif_create_array_f64(1, (intptr_t[1]){N + 1});
     OIFArrayF64 *y = oif_create_array_f64(1, (intptr_t[1]){N});
     // Grid
+    OIFArrayF64 *grid = oif_create_array_f64(1, (intptr_t[1]){N + 1});
     OIFArrayF64 *grid = oif_create_array_f64(1, (intptr_t[1]){N});
     double dx;
     double dt_max;
