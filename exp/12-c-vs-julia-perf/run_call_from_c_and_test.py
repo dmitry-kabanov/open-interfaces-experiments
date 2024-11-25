@@ -12,7 +12,7 @@ SOLUTION_FILENAME_TPL = "_output/N={:04d}/solution-{:s}.txt"
 RUNTIME_FILENAME_TPL = "_output/N={:04d}/runtimes-{:s}.txt"
 
 RESOLUTION_LIST = [100, 200, 400, 800, 1600, 3200, 6400]
-RESOLUTION_LIST = [6400]
+# RESOLUTION_LIST = [6400]
 
 
 def run(N: int) -> None:
@@ -68,6 +68,10 @@ def main():
     runtimes_mean_julia = []
     runtimes_ci_c = []
     runtimes_ci_julia = []
+    row_header = ["Method/N"]
+    row_c = ["C + OIF"]
+    row_julia = ["Julia native"]
+    table_plain = [row_header, row_c, row_julia]
     for N in RESOLUTION_LIST:
         runtimes_c = np.loadtxt(RUNTIME_FILENAME_TPL.format(N, "c"))
         runtimes_julia = np.loadtxt(RUNTIME_FILENAME_TPL.format(N, "julia"))
@@ -86,6 +90,14 @@ def main():
         print(f"N={N:04d}, J mean runtime, sec: {mean_julia:.3f} ± {ci_julia:.3f}")
         print()
 
+        row_header.append(f"{N:9d}")
+        row_c.append(f"{mean_c:.3f} ± {ci_c:.3f}")
+        row_julia.append(f"{mean_julia:.3f} ± {ci_julia:.3f}")
+
+    print(" | ".join(row_header) + " |")
+    print(" | ".join(row_c) + " |")
+    print(" | ".join(row_julia) + " |")
+
     plt.figure()
     plt.errorbar(
         RESOLUTION_LIST, runtimes_mean_c, yerr=runtimes_ci_c, fmt="o", label="C + OIF"
@@ -103,6 +115,7 @@ def main():
     plt.tight_layout(pad=0.1)
 
     plt.savefig("_assets/perf-c-vs-julia.pdf")
+    plt.savefig("_assets/perf-c-vs-julia.png")
 
 
 if __name__ == "__main__":
