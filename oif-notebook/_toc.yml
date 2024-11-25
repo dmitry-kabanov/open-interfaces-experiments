@@ -12,4 +12,5 @@ chapters:
     - file: exp/08-ivp-burgers-native-vs-oif/note
     - file: exp/09-ivp-burgers-native-vs-oif/note
     - file: exp/10-julia-native-vs-c-rhs/note
+    - file: exp/11-c-wrapper-over-py-callback/note
     - file: exp/12-c-vs-julia-perf/note
