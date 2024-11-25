@@ -15,6 +15,9 @@
 
 #include "burgers.h"
 
+enum {
+    N_TRIALS = 30,
+};
 
 
 int
@@ -206,7 +209,6 @@ main(int argc, char *argv[])
         goto finally;
     }
     bool save_solution = false;
-    int N_TRIALS = 30;
 
     // ========================================================================
     // Allocate resources.

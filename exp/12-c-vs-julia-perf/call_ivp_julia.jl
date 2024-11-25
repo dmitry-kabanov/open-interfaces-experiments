@@ -5,8 +5,7 @@ using Statistics
 using Test
 
 N_TRIALS = 30
-N_RUNS = 41_000
-N = 3200
+N::Int = 3200
 
 include("rhsversions.jl")
 using .RHSVersions
