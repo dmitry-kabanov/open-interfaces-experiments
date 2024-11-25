@@ -178,7 +178,9 @@ cython_debug/
 
 # ------------------------------- END Python ---------------------------------
 
+exp/*/_assets/
 exp/*/code/
+exp/*/.gdbinit
 scicomp-projects-scripts/
 
 # FZF .ignore file
