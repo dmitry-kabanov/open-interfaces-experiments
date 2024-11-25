@@ -13,7 +13,7 @@ if not os.path.isdir(dirname):
     raise RuntimeError("Argument must be a directory for computational experiment")
 
 if not os.path.isfile(note):
-    raise RuntimeError(f"Note.md is not present where should be: '{note:s}'")
+    raise RuntimeError(f"File '{note.as_posix():s}' does not exist")
 
 
 rootdir = os.getcwd()
