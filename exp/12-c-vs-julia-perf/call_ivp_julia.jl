@@ -20,12 +20,28 @@ function wrap_for_odejl(func)
     return wrapper
 end
 
-function benchmark_this_version(func, u0, tspan, p, save_solution)
-    runtimes::Vector{Float64} = []
-    times = collect(range(tspan[1], tspan[2], 101))
+function benchmark_this_version(func, N::Int, save_solution::Bool)
+    a = 0.0
+    b = 2.0
+    dx = (b - a) / N
+    x = Vector{Float64}(undef, N + 1)
+
+    # The grid has the following structure in C:
+    # 0 -- 1  -- 2 -- .. -- N - 1 -- N
+    # which gives in total N + 1 points.
+    for i = 1:N+1
+        x[i] = a + (i - 1) * dx;
+    end
+    u0 = 0.5 .- 0.25 * sin.(pi * x)
+
+    t0 = 0.0
+    tfinal = 10.0
+    p = (dx, )
+    tspan = (t0, tfinal)
+    times = collect(range(t0, tfinal, 101))
 
     odeProblem = ODEProblem(func, u0, tspan, p)
-    solver = init(odeProblem, DP5(); reltol=1e-6, abstol=1e-12, save_everystep = false)
+    solver = init(odeProblem, DP5(); reltol = 1e-6, abstol = 1e-12, save_everystep = false)
     # Warm up the function under benchmark.
     # func(udot, u0, p, 0.0)
     tic = time_ns()
@@ -37,7 +53,7 @@ function benchmark_this_version(func, u0, tspan, p, save_solution)
 
     if save_solution
         solution_filename = @sprintf("_output/N=%04d/solution-julia.txt", N)
-        save_vector_to_file(solver.u, solution_filename)
+        save_solution_to_file(x, solver.u, solution_filename)
     end
 
     return elapsed
@@ -64,18 +80,19 @@ function save_vector_to_file(vec::Vector{Float64}, filename::String)
     end
 end
 
-function measure()
-    x = collect(range(0, 2, N + 1))
-    dx = 2 / N
-    u0 = 0.5 .- 0.25 * sin.(pi * x)
+function save_solution_to_file(grid::Vector{Float64}, sol::Vector{Float64}, filename::String)
+    open(filename, "w") do file
+        for i = 1:length(grid)
+            x = grid[i]
+            y = sol[i]
+            row = @sprintf "%.16f %.16f\n" x y
+            write(file, row)
+        end
+    end
+end
 
-    CFL = 0.5
-    dt_max = dx * CFL
-
-    t0 = 0.0
-    tfinal = 10.0
-    p = (dx, )
-    tspan = (t0, tfinal)
+function measure(N::Int)
+    @printf "N = %04d\n" N
 
     libhandle = Libdl.dlopen("burgers.so")
     compute_rhs_oif_fn = Libdl.dlsym(libhandle, "rhs_oif")
@@ -86,13 +103,13 @@ function measure()
     w1 = wrap_for_odejl(compute_rhs_oif_wrapper)
 
     save_solution = false
-    runtime = benchmark_this_version(w1, u0, tspan, p, save_solution)
+    runtime = benchmark_this_version(w1, N, save_solution)
     runtimes::Vector{Float64} = []
     for k = 1:N_TRIALS
         if k == N_TRIALS
             save_solution = true
         end
-        runtime = benchmark_this_version(w1, u0, tspan, p, save_solution)
+        runtime = benchmark_this_version(w1, N, save_solution)
         push!(runtimes, runtime)
     end
 
@@ -104,4 +121,9 @@ function measure()
     save_vector_to_file(runtimes, runtime_filename)
 end
 
-measure()
+if length(ARGS) == 1
+    N = parse(Int, ARGS[1])
+else
+    N = 10
+end
+measure(N)
