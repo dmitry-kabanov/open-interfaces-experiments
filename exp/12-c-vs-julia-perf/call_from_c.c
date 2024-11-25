@@ -78,7 +78,7 @@ compute_initial_condition_(size_t N, OIFArrayF64 *u0, OIFArrayF64 *grid, double 
 
 int
 benchmark_one_run(
-    const char *impl, const char *output_filename, int N, bool save_solution, double *p_runtime)
+    const char *impl, const char *solution_filename, int N, bool save_solution, double *p_runtime)
 {
     int retval = -1;
     double t0 = 0.0;
@@ -162,17 +162,17 @@ benchmark_one_run(
     /* printf("Number of right-hand side evaluations = %d\n", N_RHS_EVALS); */
 
     if (save_solution) {
-        FILE *fp = fopen(output_filename, "w+e");
+        FILE *fp = fopen(solution_filename, "w+e");
         if (fp == NULL) {
-            fprintf(stderr, "Could not open file '%s' for writing\n", output_filename);
+            fprintf(stderr, "Could not open file '%s' for writing\n", solution_filename);
             retval = EXIT_FAILURE;
             goto cleanup;
         }
-        for (int i = 0; i < N; ++i) {
-            fprintf(fp, "%.8f %.8f\n", grid->data[i], y->data[i]);
+        for (int i = 0; i <= N; ++i) {
+            fprintf(fp, "%.16f %.16f\n", grid->data[i], y->data[i]);
         }
         fclose(fp);
-        printf("Solution was written to file `%s`\n", output_filename);
+        printf("Solution was written to file `%s`\n", solution_filename);
     }
 
     retval = 0;
@@ -210,38 +210,53 @@ main(int argc, char *argv[])
 
     // ========================================================================
     // Allocate resources.
-    double *runtimes = malloc(sizeof(*runtimes) * N_TRIALS);
-    if (runtimes == NULL) {
-        fprintf(stderr, "[main] Could not allocate memory for the runtimes array\n");
+    double *runtimes = NULL;
+    FILE *fh = NULL;
+
+    char runtimes_filename[512];
+    char runtimes_fmt[] = "_output/N=%04d/runtimes-c.txt";
+    nbytes_written = snprintf(runtimes_filename, sizeof runtimes_filename, runtimes_fmt, N);
+    if (nbytes_written < 0 || nbytes_written >= sizeof runtimes_filename) {
+        fprintf(
+            stderr,
+            "[main] Cannot format `runtimes_filename`: "
+            "need %zu bytes, but have only %zu bytes\n",
+            strlen(runtimes_fmt) + 1,
+            sizeof runtimes_filename
+        );
         goto finally;
     }
 
-    char runtimes_filename[512];
-    sprintf(runtimes_filename, "_output/N=%04d/runtimes-c.txt", N);
-    FILE *fh = fopen(runtimes_filename, "w");
+    fh = fopen(runtimes_filename, "w");
     if (fh == NULL) {
         fprintf(stderr,
             "[main] Could not open file to write runtimes '%s'\n",
             runtimes_filename);
         goto clean;
     }
+
+    runtimes = malloc(sizeof(*runtimes) * N_TRIALS);
+    if (runtimes == NULL) {
+        fprintf(stderr, "[main] Could not allocate memory for the runtimes array\n");
+        goto finally;
+    }
     // ========================================================================
 
     printf("Calling from C an open interface for solving y'(t) = f(t, y)\n");
     printf("where the system comes from inviscid 1D Burgers' equation\n");
     printf("Implementation: %s\n", impl);
-    printf("Output filename: %s\n", output_filename);
+    printf("Solution filename: %s\n", solution_filename);
     printf("Resolution: %d\n", N);
 
     printf("=== BEGIN warmup\n");
-    benchmark_one_run(impl, output_filename, N, save_solution, &runtimes[0]);
+    benchmark_one_run(impl, solution_filename, N, save_solution, &runtimes[0]);
     printf("=== END warmup\n");
 
     for (int i = 0; i < N_TRIALS; ++i) {
         if (i == N_TRIALS - 1) {
             save_solution = true;
         }
-        int status = benchmark_one_run(impl, output_filename, N, save_solution, &runtimes[i]);
+        int status = benchmark_one_run(impl, solution_filename, N, save_solution, &runtimes[i]);
         assert(status == 0);
     }
 
