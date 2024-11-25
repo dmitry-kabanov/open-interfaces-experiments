@@ -15,43 +15,16 @@
 
 #include "burgers.h"
 
-char *
-parse_impl(int argc, char *argv[])
-{
-    if (argc == 1) {
-        return "scipy_ode";
-    }
-    else {
-        if ((strcmp(argv[1], "scipy_ode") == 0) || (strcmp(argv[1], "sundials_cvode") == 0) ||
-            (strcmp(argv[1], "jl_diffeq") == 0)) {
-            return argv[1];
-        }
-        else {
-            fprintf(stderr, "USAGE: %s [scipy_ode | sundials_cvode | jl_diffeq]\n", argv[0]);
-            exit(EXIT_FAILURE);
-        }
-    }
-}
 
-char *
-parse_output_filename(int argc, char *argv[])
-{
-    if (argc < 3) {
-        return "_output/solution.txt";
-    }
-    else {
-        return argv[2];
-    }
-}
 
 int
 parse_resolution(int argc, char *argv[])
 {
-    if (argc < 4) {
+    if (argc < 2) {
         return 3200;
     }
     else {
-        return atoi(argv[3]);
+        return atoi(argv[1]);
     }
 }
 
@@ -217,9 +190,21 @@ int
 main(int argc, char *argv[])
 {
     int retval = -1;
-    char *impl = parse_impl(argc, argv);
-    const char *output_filename = parse_output_filename(argc, argv);
+    const char *impl = "jl_diffeq";
     const int N = parse_resolution(argc, argv);
+    char solution_filename[1024];
+    char fmt[] = "_output/N=%04d/solution-c.txt";
+    int nbytes_written = snprintf(solution_filename, sizeof solution_filename, fmt, N);
+    if (nbytes_written < 0 || nbytes_written >= sizeof solution_filename) {
+        fprintf(
+            stderr,
+            "[main] Cannot format `solution_filename`: "
+            "need %zu bytes, but have only %zu bytes\n",
+            strlen(fmt) + 1,
+            sizeof solution_filename
+        );
+        goto finally;
+    }
     bool save_solution = false;
     int N_TRIALS = 30;
 
