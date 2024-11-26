@@ -19,8 +19,8 @@ and compiled using Clang (which Julia also uses internally).
 
 We run simulations with different grid sizes $N$ and run 30 trials
 to minimize influences of other computer processes.
-The reported runtimes below averages over this trials along with error
-of the sample mean.
+The reported runtimes are sample means with 95% confidential interval
+based on standard error of the sample mean.
 
 ### Correctness
 
@@ -35,10 +35,10 @@ However, somehow solutions agree only to six-seven significant digits.
 
 Runtimes, in seconds, are the following:
 
-| Method/N |       100 |       200 |       400 |       800 |      1600 |      3200 |      6400 |
-|----------|-----------|-----------|-----------|-----------|-----------|-----------|-----------|
-| C + OIF | 0.032 ± 0.000 | 0.042 ± 0.002 | 0.045 ± 0.002 | 0.062 ± 0.001 | 0.146 ± 0.004 | 0.449 ± 0.005 | 1.881 ± 0.031 |
-| Julia native | 0.001 ± 0.000 | 0.003 ± 0.000 | 0.007 ± 0.000 | 0.031 ± 0.001 | 0.105 ± 0.002 | 0.409 ± 0.007 | 1.790 ± 0.024 |
+ | Method/N     | 100           | 200           | 400           | 800           | 1600          | 3200          | 6400          |
+ | ----------   | -----------   | -----------   | -----------   | -----------   | -----------   | -----------   | -----------   |
+ | C + OIF      | 0.032 ± 0.000 | 0.042 ± 0.002 | 0.045 ± 0.002 | 0.062 ± 0.001 | 0.146 ± 0.004 | 0.449 ± 0.005 | 1.881 ± 0.031 |
+ | Julia native | 0.001 ± 0.000 | 0.003 ± 0.000 | 0.007 ± 0.000 | 0.031 ± 0.001 | 0.105 ± 0.002 | 0.409 ± 0.007 | 1.790 ± 0.024 |
 
 ```{figure} _assets/perf-c-vs-julia.png
 
