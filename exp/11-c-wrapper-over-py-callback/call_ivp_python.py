@@ -15,13 +15,11 @@ from helpers import compute_mean_and_ci, get_outdir
 RTOL = 1e-6
 ATOL = 1e-12
 
-RESOLUTIONS_LIST = [200, 400, 800, 1600, 3200]
+RESOLUTIONS_LIST = [200, 400, 800, 1600, 3200, 6400]
 N_RUNS = 30
-RESOLUTIONS_LIST = [3200]
-N_RUNS = 1
 
 OUTDIR = get_outdir()
-RESULT_PERF_FILENAME = OUTDIR / "runtime_vs_resolution_python.csv"
+RESULT_PERF_FILENAME = OUTDIR / "runtime_python.csv"
 
 ELAPSED_TIME = 0.0
 
