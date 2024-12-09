@@ -185,3 +185,6 @@ scicomp-projects-scripts/
 
 # FZF .ignore file
 .ignore
+
+# Profiler results
+*.lprof
