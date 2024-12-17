@@ -10,8 +10,8 @@ include("../../helpers.jl")
 include("rhsversions.jl")
 using .RHSVersions
 
-VERSIONS = ["v1", "v2", "v3", "v4", "v5"]
-RESOLUTIONS_LIST = [200, 400, 800, 1600, 3200]
+VERSIONS = ["v5"]
+RESOLUTIONS_LIST = [200, 400, 800, 1600, 3200, 6400]
 N_RUNS = 30
 
 OUTDIR = Helpers.getOutdir(@__FILE__)
@@ -99,7 +99,7 @@ function main()
     label_4 = @sprintf "%-30s" "jl-native-v4"
     label_5 = @sprintf "%-30s" "jl-native-v5"
 
-    table = ["method/resolution", label_1, label_2, label_3, label_4, label_5]
+    table = ["method/resolution", label_5]
 
     solution_last_1 = []
     solution_last_2 = []

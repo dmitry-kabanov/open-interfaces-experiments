@@ -1,7 +1,11 @@
 """We wrap a C version of Burgers' eqn with ctypes and invoke OrdinaryDiffEq.jl"""
 
+import argparse
+import csv
 import ctypes
+import sys
 import time
+from dataclasses import dataclass
 
 import numpy as np
 import numpy.testing as npt
@@ -21,7 +25,22 @@ N_RUNS = 30
 OUTDIR = get_outdir()
 RESULT_PERF_FILENAME = OUTDIR / "runtime_python.csv"
 
-ELAPSED_TIME = 0.0
+
+@dataclass
+class Args:
+    nruns: int
+
+
+def parse_args(args=None):
+    if args is None:
+        args = sys.argv
+
+    p = argparse.ArgumentParser()
+    p.add_argument("--nruns", "-n", type=int, default=N_RUNS, help="Number of runs")
+
+    args = p.parse_args()
+
+    return Args(**vars(args))
 
 
 def get_wrapper_for_burgers_c_func():
@@ -46,15 +65,11 @@ def get_wrapper_for_burgers_c_func():
     def compute_rhs_wrapper(udot, u, p, t):
         # Load C function
         # Call it with arguments (t, u, udot, p)
-        global ELAPSED_TIME
-        tic = time.perf_counter()
         if isinstance(u, VectorValue):
             np_u = u.to_numpy(dtype=np.float64, copy=False)
             np_udot = udot.to_numpy(dtype=np.float64, copy=False)
             # np_udot = np.asarray(udot)
         else:
-            print("Numpy")
-            # sys.exit()
             np_u = u
             np_udot = udot
         # c_u = np_u.ctypes.data_as(double_p_t)
@@ -72,8 +87,6 @@ def get_wrapper_for_burgers_c_func():
         # c_u = ctypes.cast(memoryview(np_u)[:], double_p_t)
         # c_udot = ctypes.cast(memoryview(np_udot)[:], double_p_t)
         x = ctypes.pointer(ctypes.c_double(p[0]))
-        toc = time.perf_counter()
-        ELAPSED_TIME += toc - tic
         compute_rhs(t, c_u, c_udot, x, len(u))
         # compute_rhs(t, np_u, np_udot, x, len(u))
 
@@ -117,6 +130,11 @@ def measure_perf_once(N):
 
 
 def main():
+    args = parse_args()
+
+    if args.nruns:
+        N_RUNS = args.nruns
+
     print("Calling OrdinaryDiffEq.jl from Python with RHS written in C")
     print(f"N_RUNS = {N_RUNS}")
 
@@ -124,6 +142,8 @@ def main():
     jl.seval("using OrdinaryDiffEq")
     measure_perf_once(N=101)
     print("END warmup")
+
+    results = ["OrdinaryDiffEq.jl from Python"]
 
     for N in RESOLUTIONS_LIST:
         print()
@@ -135,10 +155,16 @@ def main():
             elapsed_times.append(runtime)
 
         runtime_mean, ci = compute_mean_and_ci(elapsed_times)
-        print(f"Runtime, sec: {runtime_mean:.3f} ± {ci:.3f}")
+        result = f"{runtime_mean:.3f} ± {ci:.3f}"
+        print(f"Runtime, sec: {result:s}")
+        results.append(result)
 
-    # print(f"ELAPSED_TIME: {ELAPSED_TIME:.3f}")
-    print(f"ELAPSED_TIME / N_RUNS, sec: {ELAPSED_TIME / N_RUNS:.3f}")
+    header = ["method/resolution"] + RESOLUTIONS_LIST
+
+    with open(RESULT_PERF_FILENAME, "w") as fh:
+        writer = csv.writer(fh, delimiter=",")
+        writer.writerow(header)
+        writer.writerow(results)
 
 
 if __name__ == "__main__":

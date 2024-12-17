@@ -23,11 +23,25 @@ The thing that worked for me is to create `juliapkg.json` file and then
 during the import it just adds and precompiles the packages.
 
 
+### Statistical results
+
+I run simulations 30 times for several different resolutions.
+The simulation are run from Julia directly and from Python directly using
+`OrdinaryDiffEq.jl` package (without OIF).
+
+These are the results:
+```
+method/resolution               200            400            800            1600           3200           6400
+jl-native-v5                    0.00 ± 0.00    0.01 ± 0.00    0.02 ± 0.00    0.09 ± 0.00    0.34 ± 0.00    1.53 ± 0.01
+OrdinaryDiffEq.jl from Python   0.11 ± 0.01    0.20 ± 0.01    0.39 ± 0.01    0.808 ± 0.009  1.80 ± 0.01    4.80 ± 0.10
+```
+
+
 ### Line profiling Python wrapper for C function
 
 Results are:
 ```
-➜ kernprof -l -v call_ivp_python.py
+➜ kernprof -l -v call_ivp_python.py --nruns 1
 Comparing performance of Open Interfaces for IVP interface from Python
 BEGIN warmup
 END warmup
