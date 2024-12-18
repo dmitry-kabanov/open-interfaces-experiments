@@ -45,7 +45,7 @@ int main() {
     printf("HERE 1\n");
     double t0 = 0.0;
     double t_final = 10.0;
-    size_t N = 4;
+    size_t N = 3200;
     OIFArrayF64 *y0 = oif_create_array_f64(1, (intptr_t[1]){N + 1});
     // Solution vector.
     OIFArrayF64 *y = oif_create_array_f64(1, (intptr_t[1]){N + 1});
