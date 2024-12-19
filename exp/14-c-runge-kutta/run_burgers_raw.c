@@ -5,8 +5,8 @@
 
 #include <oif/api.h>
 #include <oif/c_bindings.h>
-#include <oif/interfaces/ivp.h>
 #include "burgers.h"
+#include "code/oif_impl/impl/ivp/dopri5c/dopri5c.c"
 
 static int
 compute_initial_condition_(size_t N, OIFArrayF64 *u0, OIFArrayF64 *grid, double *dx,
@@ -50,42 +50,29 @@ int main() {
     status = compute_initial_condition_(N, y0, grid, &dx, &dt_max);
     assert(status == 0);
 
-    const char impl[] = "dopri5c";
-    ImplHandle implh = oif_load_impl("ivp", impl, 1, 0);
-    if (implh == OIF_IMPL_INIT_ERROR) {
-        fprintf(stderr, "Error during implementation initialization. Cannot proceed\n");
-        retval = EXIT_FAILURE;
-        goto cleanup;
-    }
-
-    status = oif_ivp_set_initial_value(implh, y0, t0);
+    status = set_initial_value(y0, t0);
     if (status) {
         fprintf(stderr, "oif_ivp_set_set_initial_value returned error\n");
         retval = EXIT_FAILURE;
         goto cleanup;
     }
-    status = oif_ivp_set_user_data(implh, &dx);
+
+    status = set_user_data(&dx);
     if (status) {
         fprintf(stderr, "oif_ivp_set_user_data return error\n");
         retval = EXIT_FAILURE;
         goto cleanup;
     }
-    status = oif_ivp_set_rhs_fn(implh, rhs_oif);
+
+    status = set_rhs_fn(rhs_oif);
     if (status) {
         fprintf(stderr, "oif_ivp_set_rhs_fn returned error\n");
         retval = EXIT_FAILURE;
         goto cleanup;
     }
 
-    status = oif_ivp_set_tolerances(implh, 1e-6, 1e-12);
+    status = set_tolerances(1e-6, 1e-12);
     assert(status == 0);
-
-    OIFConfigDict *dict = oif_config_dict_init();
-    oif_config_dict_add_int(dict, "dense", 0);
-    oif_config_dict_add_int(dict, "save_everystep", 0);
-
-    /* double t = 0.0001; */
-    /* status = oif_ivp_integrate(implh, t, y); */
 
     double dt = (t_final - t0) / T;
 
@@ -96,7 +83,7 @@ int main() {
         if (t > t_final) {
             t = t_final;
         }
-        status = oif_ivp_integrate(implh, t, y);
+        status = integrate(t, y);
         if (status) {
             fprintf(stderr, "oif_ivp_integrate returned error\n");
             retval = EXIT_FAILURE;
@@ -106,9 +93,9 @@ int main() {
     clock_t toc = clock();
     printf("Elapsed time = %.6f seconds\n", (double)(toc - tic) / CLOCKS_PER_SEC);
 
-    oif_ivp_print_stats(implh);
+    print_stats();
 
-    const char output_filename[] = "_output/solution_dopri5c_oif.txt";
+    const char output_filename[] = "_output/solution_dopri5c_raw.txt";
     FILE *fp = fopen(output_filename, "w+e");
     if (fp == NULL) {
         fprintf(stderr, "Could not open file '%s' for writing\n", output_filename);
