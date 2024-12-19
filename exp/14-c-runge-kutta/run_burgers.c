@@ -8,14 +8,6 @@
 #include <oif/interfaces/ivp.h>
 #include "burgers.h"
 
-
-#ifdef __GNUC__
-static void __attribute__((constructor)) debug_init(void) {
-    printf("DEBUG: Program starting\n");
-    fflush(stdout);
-}
-#endif
-
 static int
 compute_initial_condition_(size_t N, OIFArrayF64 *u0, OIFArrayF64 *grid, double *dx,
                            double *dt_max)
@@ -42,7 +34,6 @@ compute_initial_condition_(size_t N, OIFArrayF64 *u0, OIFArrayF64 *grid, double 
 
 int main() {
     int retval = -1;
-    printf("HERE 1\n");
     double t0 = 0.0;
     double t_final = 10.0;
     size_t N = 3200;
@@ -51,7 +42,6 @@ int main() {
     OIFArrayF64 *y = oif_create_array_f64(1, (intptr_t[1]){N + 1});
     // Grid
     OIFArrayF64 *grid = oif_create_array_f64(1, (intptr_t[1]){N + 1});
-    printf("HERE 2\n");
     double dx;
     double dt_max;
     int T = 101;
@@ -87,7 +77,7 @@ int main() {
         goto cleanup;
     }
 
-    status = oif_ivp_set_tolerances(implh, 1e-8, 1e-12);
+    status = oif_ivp_set_tolerances(implh, 1e-6, 1e-12);
     assert(status == 0);
 
     OIFConfigDict *dict = oif_config_dict_init();
@@ -115,6 +105,8 @@ int main() {
     }
     clock_t toc = clock();
     printf("Elapsed time = %.6f seconds\n", (double)(toc - tic) / CLOCKS_PER_SEC);
+
+    oif_ivp_print_stats(implh);
 
     const char output_filename[] = "_output/solution_dopri5c.txt";
     FILE *fp = fopen(output_filename, "w+e");
