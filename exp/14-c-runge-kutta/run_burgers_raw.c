@@ -9,7 +9,7 @@
 #include "code/oif_impl/impl/ivp/dopri5c/dopri5c.c"
 
 static int
-compute_initial_condition_(size_t N, OIFArrayF64 *u0, OIFArrayF64 *grid, double *dx,
+compute_initial_condition_(int N, OIFArrayF64 *u0, OIFArrayF64 *grid, double *dx,
                            double *dt_max)
 {
     double a = 0.0;
@@ -31,12 +31,24 @@ compute_initial_condition_(size_t N, OIFArrayF64 *u0, OIFArrayF64 *grid, double 
     return 0;
 }
 
+static int
+parse_resolution_(int argc, char *argv[])
+{
+    if (argc < 2) {
+        return 3200;
+    }
 
-int main() {
+    return atoi(argv[1]);
+}
+
+
+int
+main(int argc, char *argv[]) {
     int retval = -1;
     double t0 = 0.0;
     double t_final = 10.0;
-    size_t N = 3200;
+    int N = parse_resolution_(argc, argv);
+    printf("N = %d\n", N);
     OIFArrayF64 *y0 = oif_create_array_f64(1, (intptr_t[1]){N + 1});
     // Solution vector.
     OIFArrayF64 *y = oif_create_array_f64(1, (intptr_t[1]){N + 1});
@@ -102,11 +114,12 @@ int main() {
         retval = EXIT_FAILURE;
         goto cleanup;
     }
-    for (int i = 0; i < N; ++i) {
+    for (int i = 0; i <= N; ++i) {
         fprintf(fp, "%.8f %.8f\n", grid->data[i], y->data[i]);
     }
     fclose(fp);
     printf("Solution was written to file `%s`\n", output_filename);
+    retval = EXIT_SUCCESS;
 
 cleanup:
     oif_free_array_f64(y0);
