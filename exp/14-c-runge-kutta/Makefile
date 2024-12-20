@@ -4,9 +4,12 @@ CC := /usr/bin/clang
 CPPFLAGS := \
     -I$(OIF_DIR)/oif/include \
     -I$(OIF_DIR)/oif/interfaces/c/include/ \
-    -I$(OIF_DIR)/oif_impl/lang_c/include/
+    -I$(OIF_DIR)/oif_impl/lang_c/include/ \
+    -D_XOPEN_SOURCE
 
 CFLAGS := \
+    -std=c17 \
+    -Wall -Wextra -Wpedantic -Werror \
     -O3 \
     -g \
     -march=native \
