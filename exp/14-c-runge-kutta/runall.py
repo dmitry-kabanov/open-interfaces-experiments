@@ -57,15 +57,15 @@ def _get_runtimes(version: str) -> dict:
     for N in RESOLUTIONS_LIST:
         runtimes = []
         for _ in range(N_RUNS):
-            p_oif = subprocess.run(
+            prog = subprocess.run(
                 [f"./run_burgers_{version}", str(N)],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 universal_newlines=True,
             )
-            print(p_oif.stdout)
-            assert p_oif.returncode == 0
-            for line in p_oif.stdout.split("\n"):
+            print(prog.stdout)
+            assert prog.returncode == 0
+            for line in prog.stdout.split("\n"):
                 if line.startswith("Elapsed time ="):
                     chunks = line.split()
                     runtime = float(chunks[-2])
