@@ -45,8 +45,13 @@ plot-raw:
 	$(plot_script) _output/solution_dopri5c_raw.txt _assets/solution_dopri5c-raw.pdf
 
 .PHONY : clean
-clean:
+clean :
 	-$(RM) $(all_targets)
+
+.PHONY : clobber
+clobber : clean
+	-$(RM) -r _output/*
+	-$(RM) -r _assets/*
 
 
 burgers.so: burgers.c
