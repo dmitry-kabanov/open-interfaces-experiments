@@ -48,7 +48,7 @@ main(int argc, char *argv[])
     double t0 = 0.0;
     double t_final = 10.0;
     int N = parse_resolution_(argc, argv);
-    printf("N = %d\n", N);
+    printf("[oif] N = %d\n", N);
     OIFArrayF64 *y0 = oif_create_array_f64(1, (intptr_t[1]){N + 1});
     // Solution vector.
     OIFArrayF64 *y = oif_create_array_f64(1, (intptr_t[1]){N + 1});
@@ -64,30 +64,28 @@ main(int argc, char *argv[])
 
     const char impl[] = "dopri5c";
     ImplHandle implh = oif_load_impl("ivp", impl, 1, 0);
-    if (implh == OIF_IMPL_INIT_ERROR)
-    {
+    if (implh == OIF_IMPL_INIT_ERROR) {
         fprintf(stderr, "Error during implementation initialization. Cannot proceed\n");
         retval = EXIT_FAILURE;
         goto cleanup;
     }
 
     status = oif_ivp_set_initial_value(implh, y0, t0);
-    if (status)
-    {
+    if (status) {
         fprintf(stderr, "oif_ivp_set_set_initial_value returned error\n");
         retval = EXIT_FAILURE;
         goto cleanup;
     }
+
     status = oif_ivp_set_user_data(implh, &dx);
-    if (status)
-    {
+    if (status) {
         fprintf(stderr, "oif_ivp_set_user_data return error\n");
         retval = EXIT_FAILURE;
         goto cleanup;
     }
+
     status = oif_ivp_set_rhs_fn(implh, rhs_oif);
-    if (status)
-    {
+    if (status) {
         fprintf(stderr, "oif_ivp_set_rhs_fn returned error\n");
         retval = EXIT_FAILURE;
         goto cleanup;
@@ -96,27 +94,18 @@ main(int argc, char *argv[])
     status = oif_ivp_set_tolerances(implh, 1e-6, 1e-12);
     assert(status == 0);
 
-    OIFConfigDict *dict = oif_config_dict_init();
-    oif_config_dict_add_int(dict, "dense", 0);
-    oif_config_dict_add_int(dict, "save_everystep", 0);
-
-    /* double t = 0.0001; */
-    /* status = oif_ivp_integrate(implh, t, y); */
-
     double dt = (t_final - t0) / T;
+    printf("[oif] Time step is %.15f\n", dt);
 
     clock_t tic = clock();
     // Time step.
-    for (int i = 0; i < T; ++i)
-    {
+    for (int i = 0; i < T; ++i) {
         double t = t0 + (i + 1) * dt;
-        if (t > t_final)
-        {
+        if (t > t_final) {
             t = t_final;
         }
         status = oif_ivp_integrate(implh, t, y);
-        if (status)
-        {
+        if (status) {
             fprintf(stderr, "oif_ivp_integrate returned error\n");
             retval = EXIT_FAILURE;
             goto cleanup;

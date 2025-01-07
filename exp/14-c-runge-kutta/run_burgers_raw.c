@@ -9,7 +9,7 @@
 #include "code/oif_impl/impl/ivp/dopri5c/dopri5c.c"
 
 static int
-compute_initial_condition_(int N, OIFArrayF64 *u0, OIFArrayF64 *grid, double *dx,
+compute_initial_condition_(size_t N, OIFArrayF64 *u0, OIFArrayF64 *grid, double *dx,
                            double *dt_max)
 {
     double a = 0.0;
@@ -17,11 +17,11 @@ compute_initial_condition_(int N, OIFArrayF64 *u0, OIFArrayF64 *grid, double *dx
     double *x = grid->data;
     *dx = (b - a) / N;
 
-    for (int i = 0; i <= N; ++i) {
+    for (size_t i = 0; i <= N; ++i) {
         x[i] = a + i * (*dx);
     }
 
-    for (int i = 0; i <= N; ++i) {
+    for (size_t i = 0; i <= N; ++i) {
         u0->data[i] = 0.5 - 0.25 * sin(M_PI * x[i]);
     }
 
@@ -43,12 +43,13 @@ parse_resolution_(int argc, char *argv[])
 
 
 int
-main(int argc, char *argv[]) {
+main(int argc, char *argv[])
+{
     int retval = -1;
     double t0 = 0.0;
     double t_final = 10.0;
     int N = parse_resolution_(argc, argv);
-    printf("N = %d\n", N);
+    printf("[raw] N = %d\n", N);
     OIFArrayF64 *y0 = oif_create_array_f64(1, (intptr_t[1]){N + 1});
     // Solution vector.
     OIFArrayF64 *y = oif_create_array_f64(1, (intptr_t[1]){N + 1});
@@ -61,6 +62,14 @@ main(int argc, char *argv[]) {
 
     status = compute_initial_condition_(N, y0, grid, &dx, &dt_max);
     assert(status == 0);
+
+    /* const char impl[] = "dopri5c"; */
+    /* ImplHandle implh = oif_load_impl("ivp", impl, 1, 0); */
+    /* if (implh == OIF_IMPL_INIT_ERROR) { */
+    /*     fprintf(stderr, "Error during implementation initialization. Cannot proceed\n"); */
+    /*     retval = EXIT_FAILURE; */
+    /*     goto cleanup; */
+    /* } */
 
     status = set_initial_value(y0, t0);
     if (status) {
@@ -87,6 +96,7 @@ main(int argc, char *argv[]) {
     assert(status == 0);
 
     double dt = (t_final - t0) / T;
+    printf("[raw] Time step is %.15f\n", dt);
 
     clock_t tic = clock();
     // Time step.
@@ -97,7 +107,7 @@ main(int argc, char *argv[]) {
         }
         status = integrate(t, y);
         if (status) {
-            fprintf(stderr, "oif_ivp_integrate returned error\n");
+            fprintf(stderr, "integrate returned error\n");
             retval = EXIT_FAILURE;
             goto cleanup;
         }
