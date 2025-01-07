@@ -14,7 +14,7 @@ EXPDIR = get_expdir()
 FLAG_COMPLETED = OUTDIR / "completed"
 RESULTS_PERF_FILENAME = "_assets/c-oif-vs-raw.csv"
 
-RESOLUTIONS_LIST = [200, 400, 800, 1600, 3200, 6400]
+RESOLUTIONS_LIST = [1600, 6400, 25_600]
 
 N_RUNS = 30
 VERSIONS = ["oif", "raw"]
