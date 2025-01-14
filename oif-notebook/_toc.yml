@@ -15,3 +15,4 @@ chapters:
     - file: exp/11-c-wrapper-over-py-callback/note
     - file: exp/12-c-vs-julia-perf/note
     - file: exp/13-perf-analysis-overview/note
+    - file: exp/14-c-runge-kutta/note
