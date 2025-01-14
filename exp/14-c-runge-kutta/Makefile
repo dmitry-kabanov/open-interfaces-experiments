@@ -27,7 +27,7 @@ LDFLAGS := -L$(OIF_DIR)/build
 LDLIBS := -loif_c -loif_c_util -loif_c_data_structures -ldl -lm
 
 # Local variables.
-all_targets := burgers.so run_burgers_oif run_burgers_raw
+all_targets := $(addprefix bin/,burgers.so run_burgers_oif run_burgers_raw)
 plot_script := python code/examples/plot_solution_1D.py
 
 
@@ -54,11 +54,11 @@ clobber : clean
 	-$(RM) -r _assets/*
 
 
-burgers.so: burgers.c
+bin/burgers.so: burgers.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(SHLIB_FLAGS) -o $@ $^ $(LDFLAGS) $(LDLIBS)
 
-run_burgers_oif: run_burgers_oif.c burgers.so
+bin/run_burgers_oif: run_burgers_oif.c bin/burgers.so
 	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LDLIBS)
 
-run_burgers_raw: run_burgers_raw.c burgers.so
+bin/run_burgers_raw: run_burgers_raw.c bin/burgers.so
 	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LDLIBS)
