@@ -58,7 +58,7 @@ def _get_runtimes(version: str) -> dict:
         runtimes = []
         for _ in range(N_RUNS):
             prog = subprocess.run(
-                [f"./run_burgers_{version}", str(N)],
+                [f"bin/run_burgers_{version}", str(N)],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 universal_newlines=True,
