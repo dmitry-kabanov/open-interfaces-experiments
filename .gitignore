@@ -179,6 +179,7 @@ cython_debug/
 # ------------------------------- END Python ---------------------------------
 
 exp/*/_assets/
+exp/*/bin/
 exp/*/code/
 exp/*/.gdbinit
 scicomp-projects-scripts/
