@@ -1,4 +1,6 @@
+#include <stdint.h>
 #include <tgmath.h>
+
 #include <oif/api.h>
 #include <oif/c_bindings.h>
 #include <oif/interfaces/ivp.h>
