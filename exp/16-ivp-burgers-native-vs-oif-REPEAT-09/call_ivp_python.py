@@ -24,8 +24,8 @@ from helpers import compute_mean_and_ci, get_outdir
 
 RTOL = 1e-6
 ATOL = 1e-12
+N_STEPS_DOPRI5 = 1000
 
-RESOLUTIONS_LIST = [200, 400, 800, 1600, 3200]
 RESOLUTIONS_LIST = [1600, 6400, 25600]
 N_RUNS = 30
 VERSIONS = ["v1", "v2", "v3", "v4", "v4+wrapper"]
@@ -98,11 +98,11 @@ def measure_perf_once(N):
                 s.set_rhs_fn(compute_rhs_oif_numba_v4)
             elif version == "v4+wrapper":
                 s.set_rhs_fn(get_wrapper_for_compute_rhs_oif())
-            s.set_integrator("dopri5")
+            s.set_integrator("dopri5", {"nsteps": N_STEPS_DOPRI5})
             s.set_tolerances(RTOL, ATOL)
         elif version == "native":
             s = integrate.ode(compute_rhs_ode)
-            s.set_integrator("dopri5", rtol=RTOL, atol=ATOL, nsteps=10000)
+            s.set_integrator("dopri5", rtol=RTOL, atol=ATOL, nsteps=N_STEPS_DOPRI5)
             s.set_initial_value(problem.u0, problem.t0)
 
         times = np.linspace(t0, problem.tfinal, num=101)
