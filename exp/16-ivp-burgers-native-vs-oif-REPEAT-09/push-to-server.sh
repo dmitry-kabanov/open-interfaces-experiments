@@ -10,8 +10,9 @@ EXCLUDE=(
     "--exclude=code/build*"
     "--exclude=_output/"
     "--exclude=*.so"
-    "--exclude=.mypy_cache/"
-    "--exclude=__pycache__/"
+    "--exclude=.mypy_cache"
+    "--exclude=__pycache__"
+    "--exclude=code/.cache"
 )
 
 # Run rsync
