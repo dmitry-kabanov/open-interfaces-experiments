@@ -29,6 +29,7 @@ N_STEPS_DOPRI5 = 1000
 RESOLUTIONS_LIST = [1600, 6400, 25600]
 N_RUNS = 30
 VERSIONS = ["v1", "v2", "v3", "v4", "v4+wrapper"]
+VERSIONS = ["v4"]
 
 OUTDIR = get_outdir()
 RESULT_PERF_FILENAME = OUTDIR / "runtime_vs_resolution_python.csv"
