@@ -11,6 +11,7 @@ include("rhsversions.jl")
 using .RHSVersions
 
 VERSIONS = ["v1", "v2", "v3", "v4", "v5"]
+VERSIONS = ["v5"]
 RESOLUTIONS_LIST = [200, 400, 800, 1600, 3200]
 RESOLUTIONS_LIST = [1600, 6400, 25600]
 N_RUNS = 30
@@ -94,13 +95,14 @@ function main()
 
     measure_perf_once(RESOLUTIONS_LIST[1])  # We need to warm up Julia
 
-    label_1 = @sprintf "%-30s" "jl-native-v1"
-    label_2 = @sprintf "%-30s" "jl-native-v2"
-    label_3 = @sprintf "%-30s" "jl-native-v3"
-    label_4 = @sprintf "%-30s" "jl-native-v4"
-    label_5 = @sprintf "%-30s" "jl-native-v5"
+    labels = []
+    for v  in VERSIONS
+        label = @sprintf "jl-native-%s" v
+        formatted_label = @sprintf "%-30s" label
+        push!(labels, formatted_label)
+    end
 
-    table = ["method/resolution", label_1, label_2, label_3, label_4, label_5]
+    table = vcat(["method/resolution"], labels)
 
     solution_last_1 = []
     solution_last_2 = []
