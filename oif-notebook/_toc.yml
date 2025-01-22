@@ -16,3 +16,5 @@ chapters:
     - file: exp/12-c-vs-julia-perf/note
     - file: exp/13-perf-analysis-overview/note
     - file: exp/14-c-runge-kutta/note
+    - file: exp/15-c-vs-julia-perf-different-resolutions/note
+    - file: exp/16-ivp-burgers-native-vs-oif-REPEAT-09/note
