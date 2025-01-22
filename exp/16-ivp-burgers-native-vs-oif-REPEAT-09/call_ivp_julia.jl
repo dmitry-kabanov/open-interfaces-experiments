@@ -130,9 +130,9 @@ function main()
         column = [string(N)]
         for v in VERSIONS
             runtime_mean, ci = runtime_stats(elapsed_times[v])
-            @printf "%-16s: runtime, sec = %.2f ± %.2f\n" v runtime_mean ci
+            @printf "%-16s: runtime, sec = %.3f ± %.3f\n" v runtime_mean ci
 
-            val = @sprintf "%.2f ± %.2f" runtime_mean ci
+            val = @sprintf "%.3f ± %.3f" runtime_mean ci
             push!(column, val)
         end
         table = [table column]

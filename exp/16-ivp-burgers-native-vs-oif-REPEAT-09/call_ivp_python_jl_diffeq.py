@@ -3,11 +3,9 @@
 import argparse
 import csv
 import dataclasses
-import os
 import subprocess
 import time
 
-import numba as nb
 import numpy as np
 import oif.core as core
 from oif.interfaces.ivp import IVP
@@ -172,7 +170,7 @@ def main():
         ci = 2.0 * sem  # Coefficient corresponds to the 95% Confidence Interval.
         print(f"Runtime, sec: {mean:.4f} ± {ci:.4f}")
 
-        table[N] = f"{mean:.2f} ± {ci:.2f}"
+        table[N] = f"{mean:.3f} ± {ci:.3f}"
 
     args = _parse_args()
     if args.impl == "jl_diffeq":

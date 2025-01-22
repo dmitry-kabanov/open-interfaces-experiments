@@ -149,7 +149,7 @@ def main():
         for v in VERSIONS + ["native"]:
             runtime_mean, ci = compute_mean_and_ci(elapsed_times[v])
             print(f"Runtime {v:>10s}, sec: {runtime_mean:.3f} ± {ci:.3f}")
-            val = f"{runtime_mean:.2f} ± {ci:.2f}"
+            val = f"{runtime_mean:.3f} ± {ci:.3f}"
             table[methods[v]].append(val)
 
     with open(RESULT_PERF_FILENAME, "w") as fh:
