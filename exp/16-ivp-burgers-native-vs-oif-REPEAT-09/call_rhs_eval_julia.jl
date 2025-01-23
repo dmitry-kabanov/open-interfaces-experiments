@@ -3,8 +3,8 @@ using Statistics
 using Test
 
 N_TRIALS = 30
-N_RUNS = 41_000
-N = 3200
+N_RUNS = 10_000
+N = 6400
 
 include("rhsversions.jl")
 using .RHSVersions

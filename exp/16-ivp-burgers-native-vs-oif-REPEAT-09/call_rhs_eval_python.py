@@ -13,8 +13,8 @@ from common import BurgersEquationProblem
 from helpers import compute_mean_and_ci
 
 N_TRIALS = 30
-N_RUNS = 41_000
-N = 3200
+N_RUNS = 10_000
+N = 6400
 
 
 def get_wrapper_for_compute_rhs_oif():
