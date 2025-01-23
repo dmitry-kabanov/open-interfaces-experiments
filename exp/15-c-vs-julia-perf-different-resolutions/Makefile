@@ -1,7 +1,7 @@
 OIF_DIR := ./code
 
 CC := /usr/bin/clang-14
-CFLAGS := -march=nocona -mtune=native -O3 -g -fPIC
+CFLAGS := -march=native -mtune=native -O3 -g -fPIC
 CFLAGS += -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt
 CFLAGS += -ffunction-sections -pipe
 CFLAGS += -fomit-frame-pointer -funroll-loops -fno-math-errno
@@ -29,7 +29,7 @@ make-bindir:
 
 .PHONY : clean
 clean :
-	rm -rf bin/burgers.so bin/call_from_c
+	rm -rf burgers.so bin/call_from_c
 
 # Delete all obtained results and compiled artifacts.
 .PHONY : clobber
