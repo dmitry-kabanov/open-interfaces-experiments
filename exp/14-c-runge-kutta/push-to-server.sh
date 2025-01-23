@@ -5,9 +5,14 @@ dirname=${PWD/#$HOME\/}
 
 # Exclude patterns
 EXCLUDE=(
-    "--exclude=_output*"
-    "--exclude=_assets*"
+    "--exclude=_assets/"
+    "--exclude=bin/"
     "--exclude=code/build*"
+    "--exclude=_output*"
+    "--exclude=*.so"
+    "--exclude=.mypy_cache"
+    "--exclude=__pycache__"
+    "--exclude=code/.cache"
 )
 
 # Run rsync

@@ -7,9 +7,12 @@ dirname=${PWD/#$HOME\/}
 EXCLUDE=(
     "--exclude=_assets/"
     "--exclude=bin/"
-    "--exclude=code/build*/"
-    "--exclude=_output/"
+    "--exclude=code/build*"
+    "--exclude=_output*"
     "--exclude=*.so"
+    "--exclude=.mypy_cache"
+    "--exclude=__pycache__"
+    "--exclude=code/.cache"
 )
 
 # Run rsync

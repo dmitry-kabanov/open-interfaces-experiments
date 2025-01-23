@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import subprocess
 
 from helpers import get_expdir, get_outdir
