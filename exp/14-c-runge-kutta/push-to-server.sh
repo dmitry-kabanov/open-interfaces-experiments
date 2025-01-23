@@ -5,9 +5,9 @@ dirname=${PWD/#$HOME\/}
 
 # Exclude patterns
 EXCLUDE=(
-    "--exclude=_output/"
-    "--exclude=_assets/"
-    "--exclude=code/build*/"
+    "--exclude=_output*"
+    "--exclude=_assets*"
+    "--exclude=code/build*"
 )
 
 # Run rsync
