@@ -4,6 +4,11 @@ This is basically a rerun of the Exp. 12, but the resolutions are different.
 
 ## Results
 
+### Comparison of right-hand side functions
+
+The right-hand side functions are compared in the following table:
+```
+
 New runtimes are the following:
 
 | Method/N |      1600 |      6400 |     25600 |
