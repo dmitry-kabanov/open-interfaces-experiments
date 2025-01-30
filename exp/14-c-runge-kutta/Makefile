@@ -1,25 +1,14 @@
-BUILD_TYPE ?= release  # Values: [ debug, release ]
+OIF_DIR := ./code
 
-CC := /usr/bin/clang
-CPPFLAGS := \
-    -I$(OIF_DIR)/oif/include \
-    -I$(OIF_DIR)/oif/interfaces/c/include/ \
-    -I$(OIF_DIR)/oif_impl/lang_c/include/ \
-    -D_XOPEN_SOURCE
-
-CFLAGS := \
-    -std=c17 \
-    -Wall -Wextra -Wpedantic -Werror \
-    -O3 \
-    -g \
-    -march=native \
-    -mtune=native -fomit-frame-pointer -funroll-loops -fno-math-errno -fno-trapping-math
-
-ifeq ($(BUILD_TYPE),debug)
-CFLAGS := \
-    -O0 \
-    -g
-endif
+CC := /usr/bin/clang-14
+CFLAGS := -march=native -mtune=native -O3 -g -fPIC
+CFLAGS += -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt
+CFLAGS += -ffunction-sections -pipe
+CFLAGS += -fomit-frame-pointer -funroll-loops -fno-math-errno
+CFLAGS += -fno-trapping-math
+# CFLAGS += -fsanitize=address
+CPPFLAGS := -I$(OIF_DIR)/oif/include -I$(OIF_DIR)/oif/interfaces/c/include/
+CPPFLAGS += -I$(OIF_DIR)/oif_impl/lang_c/include/     -D_XOPEN_SOURCE
 
 SHLIB_FLAGS := -shared -fPIC
 

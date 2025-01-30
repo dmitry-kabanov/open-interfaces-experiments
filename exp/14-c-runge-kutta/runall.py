@@ -95,7 +95,7 @@ def _process():
         print()
         for v in VERSIONS:
             mean, ci = compute_mean_and_ci(runtimes[v])
-            val = f"{mean:.2f} ± {ci:.2f}"
+            val = f"{mean:.3f} ± {ci:.3f}"
             table[v].append(val)
 
     with open(RESULTS_PERF_FILENAME, "w") as fh:
