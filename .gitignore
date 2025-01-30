@@ -3,6 +3,10 @@ oif-notebook/_build/
 # These notes must be symlinks from the actual notes.
 oif-notebook/exp/**/note.md
 oif-notebook/exp/**/_assets
+exp/*/_output/
+exp/*/_output*/
+exp/*/_output.latest
+assets/
 
 # ------------------------------ BEGIN callgrind ------------------------------
 cachegrind.out.*
