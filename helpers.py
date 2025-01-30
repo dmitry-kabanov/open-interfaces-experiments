@@ -1,8 +1,13 @@
 """Auxiliary module to simplify plotting."""
 
+import atexit
+import functools
+import json
 import os
 import pathlib
+import shutil
 import sys
+from datetime import datetime
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -59,3 +64,60 @@ def compute_mean_and_ci(values: np.ndarray | list) -> tuple[float, float]:
     err = 2 * dev / np.sqrt(len(values))
 
     return mean, err
+
+
+def exp(main_fn):
+    @functools.wraps(main_fn)
+    def wrapper_exp(args=sys.argv):
+        now = datetime.now()
+        outdir = ("_output." + now.isoformat(timespec="seconds")).replace(":", ".")
+
+        if os.path.isdir(outdir):
+            print(f"ERROR: directory `{outdir}` already exists", file=sys.stderr)
+            sys.exit(1)
+        os.makedirs(outdir)
+
+        status = 2
+        begin_time = now
+        try:
+            status = main_fn(args, outdir=pathlib.Path(outdir))
+            if status is None:
+                status = 0
+        except KeyboardInterrupt:
+            print("ERROR: experiment was interrupted", file=sys.stderr)
+            status = 1
+        except Exception as e:
+            status = 2
+            raise e
+        finally:
+            if status != 0:
+                print("ERROR: experiment was not successful", file=sys.stderr)
+                shutil.move(outdir, outdir + ".fail")
+                outdir = outdir + ".fail"
+            else:
+                if os.path.exists("_output.latest"):
+                    os.remove("_output.latest")
+                os.symlink(outdir, "_output.latest")
+
+            end_time = datetime.now()
+
+            summary = {
+                "begin_time": begin_time.isoformat(timespec="seconds"),
+                "end_time": end_time.isoformat(timespec="seconds"),
+                "args": " ".join(args),
+                "status": status,
+                "outdir": outdir,
+            }
+            summary_json = json.dumps(summary, indent=4)
+            with open(os.path.join(outdir, "summary.json"), "w") as fh:
+                fh.write(summary_json)
+            os.chmod(outdir, mode=0o555)
+
+            atexit.register(
+                lambda summary: print(f"\n=== Experiment summary:\n{summary}"),
+                summary_json,
+            )
+
+        return status
+
+    return wrapper_exp
