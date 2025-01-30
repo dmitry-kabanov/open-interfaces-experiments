@@ -17,7 +17,7 @@ RESOLUTIONS = [64, 128, 256, 512]
 RTOL = 1e-6
 ATOL = 1e-12
 
-RESULT_DATA_PICKLE = os.path.join("_output", "ivp_cvode_gs_data.pickle")
+RESULT_DATA_PICKLE = os.path.join("_output.latest", "ivp_cvode_gs_data.pickle")
 
 RESULT_SOLN_DATA_FILENAME_TPL = os.path.join("_assets", "ivp_cvode_gs_soln_{}.txt")
 RESULT_SOLUTION_FILENAME_TPL = os.path.join("_assets", "ivp_cvode_gs_soln_{}.pdf")
