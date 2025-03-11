@@ -19,3 +19,6 @@ chapters:
     - file: exp/15-c-vs-julia-perf-different-resolutions/note
     - file: exp/16-ivp-burgers-native-vs-oif-REPEAT-09/note
     - file: exp/17-perf-study-gray-scott-N=30-REPEAT-04/note
+    - file: exp/18-c-rhs-performance/note
+    - file: exp/19-ivp-examples-burgers-vdp/note
+    - file: exp/20-integrate-without-loop/note
