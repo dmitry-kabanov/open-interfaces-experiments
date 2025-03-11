@@ -18,6 +18,7 @@ x, soln = data[:, 0], data[:, 1]
 axes.plot(x, soln, "-")
 axes.set_xlabel("$x$")
 axes.set_ylabel("Solution")
+axes.text(-0.2, 0.9, "A", weight="bold", transform=axes.transAxes)
 plt.tight_layout(pad=0.1)
 plt.savefig("_assets/ivp-burgers.pdf")
 plt.show()
@@ -30,8 +31,9 @@ t, y1 = data[:, 0], data[:, 1]
 axes.plot(t, y1, "-")
 axes.set_xlabel("$t$")
 axes.set_ylabel("Solution")
+axes.text(-0.2, 0.9, "B", weight="bold", transform=axes.transAxes)
 plt.tight_layout(pad=0.1)
 plt.savefig("_assets/ivp-vdp.pdf")
 plt.show()
 
-open("_assets/.done", "wa").close()
+open("_assets/.done", "w").close()
