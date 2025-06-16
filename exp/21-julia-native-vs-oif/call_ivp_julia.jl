@@ -174,7 +174,7 @@ function measure(N::Int, N_TRIALS::Int)
     label = @sprintf "Runtime, sec: "
     print_runtime(label, mean, ci)
 
-    runtime_filename = @sprintf("_output/N=%04d/runtimes-julia-oif.txt", N)
+    runtime_filename = @sprintf("_output/N=%04d/runtimes-julia-native.txt", N)
     save_vector_to_file(runtimes, runtime_filename)
 
     ### Benchmark OIF version.
@@ -204,8 +204,6 @@ end
 
 N = parse(Int, ARGS[1])
 N_TRIALS = parse(Int, ARGS[2])
-# N = 320
-# N_TRIALS = 1
 
 print("Parsed resolution N = $N, number of trials N_TRIALS = $N_TRIALS\n")
 
