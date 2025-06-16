@@ -3,9 +3,11 @@
 #include <oif/api.h>
 
 int
-rhs_oif(double t, OIFArrayF64 *y, OIFArrayF64 *rhs_out, void *user_data);
+rhs_oif_orig(double t, OIFArrayF64 *y, OIFArrayF64 *rhs_out, void *user_data);
 
 int
-rhs_carray(
-    double t, const double *const y, double *restrict rhs_out, void *restrict user_data, size_t N);
+rhs_oif_index_based_max(double t, OIFArrayF64 *y, OIFArrayF64 *rhs_out, void *user_data);
+
+int
+rhs_oif_simd_max(double t, OIFArrayF64 *y, OIFArrayF64 *rhs_out, void *user_data);
 

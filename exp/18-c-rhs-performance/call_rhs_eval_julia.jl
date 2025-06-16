@@ -75,12 +75,14 @@ function measure()
     p = (dx, )
 
     libhandle = Libdl.dlopen("burgers.so")
-    compute_rhs_oif_fn = Libdl.dlsym(libhandle, "rhs_oif")
-    compute_rhs_carray_fn = Libdl.dlsym(libhandle, "rhs_carray")
-    println(compute_rhs_oif_fn)
-    println(compute_rhs_carray_fn)
-    compute_rhs_oif_wrapper = CallbackWrapper.make_wrapper_over_oif_c_callback(compute_rhs_oif_fn)
-    compute_rhs_carray_wrapper = CallbackWrapper.make_wrapper_over_carray_c_callback(compute_rhs_carray_fn)
+    compute_rhs_oif_orig_fn = Libdl.dlsym(libhandle, "rhs_oif_orig")
+    compute_rhs_oif_index_based_max_fn = Libdl.dlsym(libhandle, "rhs_oif_index_based_max")
+    compute_rhs_oif_simd_max_fn = Libdl.dlsym(libhandle, "rhs_oif_simd_max")
+
+    println(compute_rhs_oif_orig_fn)
+    compute_rhs_oif_orig_wrapper = CallbackWrapper.make_wrapper_over_oif_c_callback(compute_rhs_oif_orig_fn)
+    compute_rhs_oif_index_based_max_wrapper = CallbackWrapper.make_wrapper_over_oif_c_callback(compute_rhs_oif_index_based_max_fn)
+    compute_rhs_oif_simd_max_wrapper = CallbackWrapper.make_wrapper_over_oif_c_callback(compute_rhs_oif_simd_max_fn)
 
     udot = similar(u0)
     udot_v1 = similar(u0)
@@ -101,7 +103,9 @@ function measure()
     @printf "Problem size is %d\n" length(udot)
 
     benchmark_this_version("v5", compute_rhs_v5, udot_v5, u, p)
-    benchmark_this_version("cwrapper-oif", compute_rhs_oif_wrapper, udot_oif_cwrapper, u, p)
+    benchmark_this_version("cwrapper-oif-original", compute_rhs_oif_original_wrapper, udot_oif_cwrapper, u, p)
+    benchmark_this_version("cwrapper-oif-index-based-max", compute_rhs_oif_index_based_max_wrapper, udot_oif_cwrapper, u, p)
+    benchmark_this_version("cwrapper-oif-simd-max", compute_rhs_oif_simd_max_wrapper, udot_oif_cwrapper, u, p)
     # benchmark_this_version("cwrapper-carray", compute_rhs_carray_wrapper, udot_carray_cwrapper, u, p)
 
     @test udot_v5 ≈ udot_oif_cwrapper rtol=1e-14 atol=1e-14

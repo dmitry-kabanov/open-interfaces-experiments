@@ -141,7 +141,7 @@ benchmark_one_run(
         retval = EXIT_FAILURE;
         goto cleanup;
     }
-    status = oif_ivp_set_rhs_fn(implh, rhs_oif);
+    status = oif_ivp_set_rhs_fn(implh, rhs_oif_orig);
     if (status) {
         fprintf(stderr, "oif_ivp_set_rhs_fn returned error\n");
         retval = EXIT_FAILURE;
