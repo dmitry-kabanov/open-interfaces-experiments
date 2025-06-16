@@ -3,7 +3,7 @@ export make_wrapper_for_c_callback
 
 import SciMLBase
 
-using OpenInterfaces: OIFArrayF64
+using OpenInterfaces: OIFArrayF64, OIF_ARRAY_C_CONTIGUOUS
 
 function make_wrapper_over_oif_c_callback(fn_c::Ptr{Cvoid})::Function
     function wrapper(t, y, ydot, user_data)::Int
@@ -47,7 +47,7 @@ function _oif_array_f64_pointer_from_array_f64(arr::AbstractArray{T, N}) where {
     ndim = ndims(arr)
     dimensions = Base.unsafe_convert(Ptr{Clong}, collect(size(arr)))
     data = Base.unsafe_convert(Ptr{Float64}, arr)
-    oif_arr = Ref(OIFArrayF64(ndim, dimensions, data))
+    oif_arr = Ref(OIFArrayF64(ndim, dimensions, data, OIF_ARRAY_C_CONTIGUOUS))
     return oif_arr
 end
 end
