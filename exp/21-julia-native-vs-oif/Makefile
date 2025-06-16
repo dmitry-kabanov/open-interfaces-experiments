@@ -10,7 +10,7 @@ CFLAGS += -fno-trapping-math
 CPPFLAGS = -I$(OIF_DIR)/include -I$(OIF_DIR)/oif/interfaces/c/include/
 
 LDFLAGS := -L$(OIF_DIR)/build
-LDLIBS := -loif_c_data_structures -loif_c -loif_c_util -ldl -lm
+LDLIBS := -loif_common_data_structures -loif_common_util -loif_c -ldl -lm
 
 .PHONY : all
 all : bin/call_from_c
