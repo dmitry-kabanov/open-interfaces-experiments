@@ -1,7 +1,10 @@
 # Computational experiments for MaRDI Open Interfaces
 
 This repository contains computational experiments conducted for the paper
-on MaRDI Open Interfaces.
+on [MaRDI Open Interfaces](https://github.com/MaRDI4NFDI/open-interfaces).
+
+The paper was published in November 2025 by the _Journal of Open Research Software_ :
+https://openresearchsoftware.metajnl.com/articles/10.5334/jors.569
 
 
 # Laboratory Notebook
@@ -18,3 +21,7 @@ and then to open the book in the browser:
 ```shell
 open oif-notebook/_build/html/index.html
 ```
+
+# Copyright
+
+2023--2005 &copy; Dmitry I. Kabanov, Stephan Rave, Mario Ohlberger
